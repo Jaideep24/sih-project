@@ -136,6 +136,7 @@ body {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ message: message }),
+				signal: controller.signal // Link the AbortController signal
             });
 
             if (!response.ok) {
@@ -165,4 +166,5 @@ body {
 });
 </script>
 </html>
+
 
