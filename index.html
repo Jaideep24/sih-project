@@ -124,6 +124,9 @@ body {
         // Display user's message
         addMessage(message, 'user');
         userInput.value = '';
+		 const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
+
 
         try {
             // Send user message to n8n webhook
@@ -162,3 +165,4 @@ body {
 });
 </script>
 </html>
+
