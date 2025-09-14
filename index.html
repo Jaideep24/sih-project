@@ -163,12 +163,17 @@ body {
     function addMessage(text, sender) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', `${sender}-message`);
-        messageDiv.textContent = text;
+         // Convert newline characters to <br> tags
+    const formattedText = text.replace(/\n/g, '<br>');
+
+    // Set the innerHTML to render the <br> tags
+    messageDiv.innerHTML = formattedText;
         chatBox.appendChild(messageDiv);
     }
 });
 </script>
 </html>
+
 
 
 
