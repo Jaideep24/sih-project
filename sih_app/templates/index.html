@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Mental Health | Home</title>
+  <style>
+    :root{
+      --bg: #f6f8ff;
+      --bg-2: #fdf7ff;
+      --card: #ffffff;
+      --ink: #1f2a44;
+      --muted: #5b6b8c;
+      --primary: #6c7bff;
+      --primary-2:#9b8cff;
+      --accent: #9be7d6;
+      --danger: #ff6b6b;
+      --shadow: 0 10px 30px rgba(31,42,68,0.08);
+      --radius: 14px;
+      --ring: 0 0 0 3px rgba(108,123,255,0.25);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"}
+    body{background: linear-gradient(180deg,var(--bg), var(--bg-2));}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.7);backdrop-filter: blur(10px);border-bottom:1px solid #eef2ff}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
+    .logo{width:38px;height:38px;border-radius:10px;background: linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow: var(--shadow)}
+    nav ul{display:flex;flex-wrap:wrap;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
+    nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
+
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center;padding:56px 0}
+    .hero .card{padding:34px}
+    h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:0 0 12px}
+    .subtitle{color:var(--muted);margin:0 0 18px}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;padding:12px 18px;border:none;border-radius:12px;font-weight:700;box-shadow: var(--shadow);cursor:pointer}
+    .btn:focus{outline:none;box-shadow: var(--shadow), var(--ring)}
+
+    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow)}
+
+    .qotd{padding:28px;text-align:center}
+    .qotd p{font-style:italic;color:var(--muted);margin:0}
+
+    .mood{display:grid;grid-template-columns:1fr;gap:14px;padding:24px}
+    .mood .scale{display:flex;justify-content:space-between;font-size:22px}
+    .range{appearance:none;width:100%;height:10px;border-radius:10px;background:#eef2ff;outline:none}
+    .range::-webkit-slider-thumb{appearance:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow:0 4px 10px rgba(0,0,0,.15);cursor:pointer;border:3px solid #fff}
+    .range::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2));border:none}
+    .mood small{color:var(--muted)}
+
+    .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .quick a{display:block;padding:18px;border-radius:14px;border:1px solid #eef2ff;background:#fff;box-shadow:var(--shadow)}
+    .quick h3{margin:0 0 6px;font-size:18px}
+    .quick p{margin:0;color:var(--muted);font-size:14px}
+
+    footer{margin-top:56px;background:#0f172a;color:#dbeafe}
+    footer .container{display:grid;gap:10px;padding:28px 20px}
+    .help{display:flex;flex-wrap:wrap;gap:12px}
+    .tag{background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:6px 10px;border-radius:999px;font-size:13px}
+
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr}
+      .quick{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><span>CampusCare</span></div>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a class="active" href="/">Home</a></li>
+          <li><a href="/support/">Support Hub</a></li>
+          <li><a href="/wellness/">Wellness Hub</a></li>
+          <li><a href="/peer/">Peer Support</a></li>
+          <li><a href="/myspace/">My Space</a></li>
+          <li><a href="/admin/">Admin</a></li>
+          <li><a href="/login/">Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" id="top">
+    <section class="hero">
+      <article class="card">
+        <h1>Your space for mental wellness</h1>
+        <p class="subtitle">Confidential resources, a friendly AI to talk to, and practical tools to help you manage stress, exams, and everyday life.</p>
+  <button class="btn" onclick="location.href='/support/#chat'" aria-label="Start Chat with AI">💬 Start Chat with AI</button>
+        <div style="margin-top:14px"><small class="subtitle">No sign-up required. You can stop at any time.</small></div>
+      </article>
+      <aside class="card qotd" id="quote">
+        <p>“You don’t have to control your thoughts. You just have to stop letting them control you.” — Dan Millman</p>
+      </aside>
+    </section>
+
+    <section class="card mood" id="mood">
+      <div>
+        <h2 style="margin:0 0 4px">How are you feeling today?</h2>
+        <small>Pick a mood and save it to your private history (stored only in your browser).</small>
+      </div>
+      <div class="scale" aria-hidden="true"><span>😞</span><span>😐</span><span>🙂</span><span>😊</span><span>🤩</span></div>
+      <input id="moodRange" class="range" type="range" min="1" max="5" step="1" value="3" aria-label="Mood slider" />
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn" id="saveMood">Save Mood</button>
+        <small id="moodStatus" class="subtitle">Unsaved</small>
+      </div>
+    </section>
+
+    <section aria-labelledby="quick-links" style="margin-top:24px">
+      <h2 id="quick-links" style="margin:0 0 12px">Quick links</h2>
+      <div class="quick">
+  <a href="/support/#booking" class="ql card">
+          <h3>Book Appointment</h3>
+          <p>Reserve a slot with campus counsellors.</p>
+        </a>
+  <a href="/wellness/#game" class="ql card">
+          <h3>Breathing Game</h3>
+          <p>Practice a 4-7-8 guided breath with animation.</p>
+        </a>
+  <a href="/wellness/#resources" class="ql card">
+          <h3>Resource Hub</h3>
+          <p>Videos, audio, and step‑by‑step guides.</p>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <strong>Need urgent help?</strong>
+      <div class="help">
+        <span class="tag">Campus Helpline: +1 (555) 100‑2000</span>
+        <span class="tag">National Lifeline: 988 (US)</span>
+        <span class="tag">Text: HOME to 741741</span>
+      </div>
+      <small>© <span id="year"></span> CampusCare • contact@campuscare.example</small>
+    </div>
+  </footer>
+
+  <script>
+    const MOOD_KEY = 'smh_moods';
+    const range = document.getElementById('moodRange');
+    const status = document.getElementById('moodStatus');
+    const saveBtn = document.getElementById('saveMood');
+
+    function loadMoods(){
+      try{ return JSON.parse(localStorage.getItem(MOOD_KEY)||'[]') }catch{ return [] }
+    }
+    function saveMoods(list){ localStorage.setItem(MOOD_KEY, JSON.stringify(list)) }
+
+    saveBtn.addEventListener('click', ()=>{
+      const list = loadMoods();
+      list.push({ ts: Date.now(), mood: Number(range.value) });
+      saveMoods(list);
+      status.textContent = 'Saved ✔';
+      saveBtn.animate([{ transform:'scale(1)'},{ transform:'scale(1.05)'},{ transform:'scale(1)'}],{duration:300});
+    });
+
+    (function(){
+      const list = loadMoods();
+      if(list.length){
+        const last = list[list.length-1];
+        status.textContent = `Last saved: ${new Date(last.ts).toLocaleString()} (mood ${last.mood})`;
+      }
+    })();
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

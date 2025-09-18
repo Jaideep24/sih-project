@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up | CampusCare</title>
+  <style>
+    :root{--bg:#f6f8ff;--card:#fff;--ink:#0f2238;--muted:#58708d;--primary:#6c7bff;--p2:#9b8cff;--shadow:0 10px 30px rgba(15,34,56,.08);--radius:14px}
+    html,body{margin:0;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial}
+    body{background:linear-gradient(180deg,#f6f8ff,#fff)}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:900px;margin:0 auto;padding:0 20px}
+    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;max-width:520px;width:100%}
+    h1{margin:0 0 6px}
+    .sub{margin:0 0 18px;color:var(--muted)}
+    form{display:grid;gap:12px;margin-top:16px}
+    label{font-weight:600}
+    input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:10px}
+    .btn{background:linear-gradient(135deg,var(--primary),var(--p2));color:#fff;border:none;border-radius:10px;padding:12px 14px;font-weight:700;cursor:pointer}
+    .meta{font-size:13px;color:#64748b}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h1>Create Student Account</h1>
+      <form id="signupForm" method="post" autocomplete="on">
+        {% csrf_token %}
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required placeholder="you@school.edu">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required placeholder="••••••••">
+        <input id="student_id" name="student_id" type="hidden">
+        <button class="btn" type="submit">Sign Up</button>
+      </form>
+  <p class="meta">Already have an account? <a href="/login/">Login here</a>.</p>
+    </section>
+  </main>
+  <script>
+    function generateStudentId() {
+      const words = ["alpha","bravo","charlie","delta","echo","foxtrot","golf","hotel","india","juliet","kilo","lima","mike","november","oscar","papa","quebec","romeo","sierra","tango","uniform","victor","whiskey","xray","yankee","zulu"];
+      function randomWord() { return words[Math.floor(Math.random()*words.length)]; }
+      return randomWord() + '-' + randomWord() + '-' + Math.floor(Math.random()*10000);
+    }
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+      var generatedId = generateStudentId();
+      document.getElementById('student_id').value = generatedId;
+      alert('Your generated Student ID is: ' + generatedId + '\nPlease save this ID. You will need it to log in.');
+    });
+  </script>
+</body>
+</html>

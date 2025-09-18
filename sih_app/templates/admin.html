@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard (Mock)</title>
+  <style>
+    :root{--bg:#f6f8ff;--card:#fff;--ink:#0f2238;--muted:#58708d;--primary:#6c7bff;--p2:#9b8cff;--shadow:0 10px 30px rgba(15,34,56,.08);--radius:14px}
+    html,body{margin:0;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial}
+    body{background:linear-gradient(180deg,#f6f8ff,#fff)}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.7);backdrop-filter: blur(10px);border-bottom:1px solid #eef2ff}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+    .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--p2));box-shadow:var(--shadow)}
+    nav ul{display:flex;gap:14px;list-style:none;margin:0;padding:0}
+    nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
+    nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
+
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin:22px 0}
+    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+
+    .bars{display:flex;align-items:flex-end;gap:12px;height:200px;background:#fff;border:1px dashed #e5e7eb;border-radius:12px;padding:12px}
+    .b{width:28px;border-radius:10px 10px 0 0;background:linear-gradient(180deg,#c7d2fe,#6c7bff)}
+
+    .donut{width:220px;height:220px;border-radius:50%;background:
+      conic-gradient(#6c7bff 0 40%,#22c55e 0 70%,#f59e0b 0 90%,#ef4444 0 100%);
+      display:grid;place-items:center;position:relative;margin:auto}
+    .donut::after{content:'';position:absolute;width:150px;height:150px;border-radius:50%;background:#fff}
+    .legend{display:grid;gap:6px}
+    .leg{display:flex;align-items:center;gap:8px}
+    .sw{width:12px;height:12px;border-radius:3px}
+
+    @media(max-width: 1000px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo"></div><span>CampusCare</span></div>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/support/">Support Hub</a></li>
+          <li><a href="/wellness/">Wellness Hub</a></li>
+          <li><a href="/peer/">Peer Support</a></li>
+          <li><a href="/myspace/">My Space</a></li>
+          <li><a class="active" href="/admin/">Admin</a></li>
+          <li><a href="/login/">Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container grid">
+    <section class="card">
+      <h2 style="margin:0 0 8px">Weekly Activity (dummy)</h2>
+      <div class="bars" id="bars"></div>
+      <small style="color:var(--muted)">Messages sent, resources viewed, games played.</small>
+    </section>
+
+    <aside class="card">
+      <h2 style="margin:0 0 8px">Mood Distribution</h2>
+      <div class="donut"></div>
+      <div class="legend" style="margin-top:10px">
+        <div class="leg"><span class="sw" style="background:#6c7bff"></span> Positive (40%)</div>
+        <div class="leg"><span class="sw" style="background:#22c55e"></span> Neutral (30%)</div>
+        <div class="leg"><span class="sw" style="background:#f59e0b"></span> Slightly Low (20%)</div>
+        <div class="leg"><span class="sw" style="background:#ef4444"></span> Low (10%)</div>
+      </div>
+    </aside>
+
+    <section class="card" style="grid-column:1/-1">
+      <h2 style="margin:0 0 8px">Trends & Notes</h2>
+      <p style="margin:0;color:var(--muted)">Anonymized insights will appear here. For production, aggregate client-side data and send only aggregated metrics.</p>
+    </section>
+  </main>
+
+  <script>
+    const data = [18,26,22,30,15,28,35];
+    const bars = document.getElementById('bars');
+    data.forEach(v=>{
+      const b = document.createElement('div');
+      b.className='b';
+      b.style.height = (v*4)+'px';
+      b.title = v+' actions';
+      bars.appendChild(b);
+    });
+
+    // Future: Fetch anonymized metrics from backend
+  </script>
+</body>
+</html>

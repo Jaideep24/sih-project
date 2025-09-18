@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support Hub | Chat & Booking</title>
+  <style>
+    :root{--bg:#f7fbff;--card:#fff;--ink:#12223a;--muted:#58708d;--primary:#6c7bff;--p2:#9b8cff;--shadow:0 10px 30px rgba(18,34,58,.08);--radius:14px}
+    html,body{margin:0;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial}
+    body{background:linear-gradient(180deg,#f6f8ff,#fefbff)}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.7);backdrop-filter: blur(10px);border-bottom:1px solid #eef2ff}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+    .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--p2));box-shadow:var(--shadow)}
+    nav ul{display:flex;gap:14px;list-style:none;margin:0;padding:0}
+    nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
+    nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:24px 0}
+    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow)}
+
+    .chat{display:grid;grid-template-rows:auto 1fr auto;min-height:520px}
+    .chat header{position:relative;background:#fff;border-bottom:1px solid #eef2ff;border-radius:14px 14px 0 0}
+    .chat h2{margin:0;padding:16px 18px}
+    .messages{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .msg{max-width:80%;padding:10px 12px;border-radius:12px}
+    .bot{align-self:flex-start;background:#eef2ff;color:#111827}
+    .user{align-self:flex-end;background:linear-gradient(135deg,var(--primary),var(--p2));color:#fff}
+    .composer{display:flex;gap:10px;padding:12px;border-top:1px solid #eef2ff}
+    input[type=text]{flex:1;padding:12px;border-radius:10px;border:1px solid #e5e7eb}
+    .btn{background:linear-gradient(135deg,var(--primary),var(--p2));color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+
+    form.booking{display:grid;gap:12px;padding:18px}
+    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    label{font-weight:600}
+    select, input[type=date], input[type=time]{width:100%;padding:12px;border-radius:10px;border:1px solid #e5e7eb}
+
+    @media(max-width: 900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo"></div><span>CampusCare</span></div>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a class="active" href="support.html">Support Hub</a></li>
+          <li><a href="wellness.html">Wellness Hub</a></li>
+          <li><a href="peer.html">Peer Support</a></li>
+          <li><a href="myspace.html">My Space</a></li>
+          <li><a href="admin.html">Admin</a></li>
+          <li><a href="login.html">Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container grid">
+    <section class="card chat" id="chat">
+      <header><h2>AI Chat</h2></header>
+      <div id="messages" class="messages" aria-live="polite"></div>
+      <div class="composer">
+        <input id="chatInput" type="text" placeholder="Ask anything..." />
+        <button id="sendBtn" class="btn">Send</button>
+      </div>
+    </section>
+
+    <aside class="card" id="booking">
+      <form class="booking" id="bookingForm">
+        <h2 style="margin:0 0 6px">Book Appointment</h2>
+        <p style="margin:0;color:var(--muted)">Pick a date, time, and counsellor.</p>
+        <div class="row">
+          <div>
+            <label for="date">Date</label>
+            <input id="date" type="date" required />
+          </div>
+          <div>
+            <label for="time">Time</label>
+            <input id="time" type="time" required />
+          </div>
+        </div>
+        <div>
+          <label for="c">Counsellor</label>
+          <select id="c" required>
+            <option value="">Select...</option>
+            <option>Dr. Patel</option>
+            <option>Ms. Rivera</option>
+            <option>Mr. Chen</option>
+          </select>
+        </div>
+        <button class="btn" type="submit">Confirm Booking</button>
+        <small style="color:var(--muted)">A calendar invite will be sent in a future integration.</small>
+      </form>
+    </aside>
+  </main>
+
+  <script>
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    const BOT = {
+      hello: "Hi! I'm here to listen. How are you feeling today?",
+      anxiety: "Anxiety can be overwhelming. Try a 4-7-8 breath: inhale 4, hold 7, exhale 8. Would you like a quick guide?",
+      exam: "Exam stress is common. Let's plan: list topics, schedule short blocks, add breaks. You've got this!",
+      stress: "Noticing stress is a great first step. What helps you unwind? A short walk, music, or a 5‑minute stretch can help.",
+      depressed: "I'm sorry you're going through this. You're not alone. Consider talking to a counsellor—booking is on the right.",
+      default: "I may not understand perfectly, but I'm here for you. You can try rephrasing or ask about anxiety, exams, or stress."
+    };
+
+    function addMsg(text, who){
+      const div = document.createElement('div');
+      div.className = `msg ${who}`;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function botReply(q){
+      const s = q.toLowerCase();
+      if(/hello|hi|hey/.test(s)) return BOT.hello;
+      if(/anxiety|panic/.test(s)) return BOT.anxiety;
+      if(/exam|test/.test(s)) return BOT.exam;
+      if(/stress|overwhelm/.test(s)) return BOT.stress;
+      if(/sad|depress/.test(s)) return BOT.depressed;
+      return BOT.default;
+    }
+
+    function send(){
+      const v = input.value.trim();
+      if(!v) return;
+      addMsg(v,'user');
+      input.value = '';
+      setTimeout(()=> addMsg(botReply(v),'bot'), 300);
+    }
+
+    sendBtn.addEventListener('click', send);
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); send(); }});
+
+    addMsg(BOT.hello,'bot');
+
+    document.getElementById('bookingForm').addEventListener('submit', (e)=>{
+      
+      const d = document.getElementById('date').value;
+      const t = document.getElementById('time').value;
+      const c = document.getElementById('c').value;
+      if(!d || !t || !c) return;
+      alert(`Booking confirmed:\n${d} at ${t}\nCounsellor: ${c}`);
+    });
+  </script>
+</body>
+</html>
