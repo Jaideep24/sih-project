@@ -119,28 +119,33 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
-    function botReply(q){
-      const s = q.toLowerCase();
-      if(/hello|hi|hey/.test(s)) return BOT.hello;
-      if(/anxiety|panic/.test(s)) return BOT.anxiety;
-      if(/exam|test/.test(s)) return BOT.exam;
-      if(/stress|overwhelm/.test(s)) return BOT.stress;
-      if(/sad|depress/.test(s)) return BOT.depressed;
-      return BOT.default;
-    }
+    // Replace with your n8n chatbot API endpoint
+    const N8N_API_URL = 'https://jaideep2404.app.n8n.cloud/webhook/33fb3d28-1c39-4ccf-b4c5-04b45a09cf33';
 
-    function send(){
+    async function send(){
       const v = input.value.trim();
       if(!v) return;
       addMsg(v,'user');
       input.value = '';
-      setTimeout(()=> addMsg(botReply(v),'bot'), 300);
+      try {
+        const res = await fetch(N8N_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: v })
+        });
+        const data = await res.json();
+        addMsg(data.output || 'Sorry, no response from chatbot.','bot');
+      } catch (err) {
+        addMsg('Error contacting chatbot API.','bot');
+      }
     }
 
     sendBtn.addEventListener('click', send);
     input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); send(); }});
 
-    addMsg(BOT.hello,'bot');
+    addMsg('Hi! I\'m here to listen. How are you feeling today?','bot');
 
     document.getElementById('bookingForm').addEventListener('submit', (e)=>{
       
