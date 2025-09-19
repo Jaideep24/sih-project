@@ -1,3 +1,80 @@
+def dashboard(request):
+	return render(request, 'dashboard.html')
+# Student: view appointments and waiting list status
+def student_appointments(request):
+	if request.session.get('user_type') != 'student':
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	appointments = Appointment.objects.filter(student=student)
+	waiting_list = WaitingList.objects.filter(student=student)
+	return render(request, 'student_appointments.html', {
+		'appointments': appointments,
+		'waiting_list': waiting_list,
+	})
+# Supervisor: manage appointments and waiting list
+def supervisor_appointments(request):
+	if request.session.get('user_type') != 'supervisor':
+		return redirect('login')
+	teacher = Teacher.objects.get(email=request.session['user_email'])
+	slots = CounsellorSlot.objects.filter(created_by=teacher)
+	appointments = Appointment.objects.filter(slot__in=slots)
+	waiting_list = WaitingList.objects.filter(slot__in=slots)
+	if request.method == 'POST':
+		if 'appt_id' in request.POST:
+			appt = Appointment.objects.get(id=request.POST['appt_id'])
+			appt.status = request.POST['status']
+			appt.save()
+		elif 'waiting_id' in request.POST:
+			waiting = WaitingList.objects.get(id=request.POST['waiting_id'])
+			if request.POST.get('action') == 'confirm':
+				# Confirm this student, create appointment, remove from waiting list
+				Appointment.objects.create(slot=waiting.slot, student=waiting.student, status='confirmed')
+				waiting.delete()
+			elif request.POST.get('action') == 'remove':
+				waiting.delete()
+		# Refresh data after changes
+		appointments = Appointment.objects.filter(slot__in=slots)
+		waiting_list = WaitingList.objects.filter(slot__in=slots)
+	return render(request, 'supervisor_appointments.html', {
+		'appointments': appointments,
+		'waiting_list': waiting_list,
+	})
+from .models import CounsellorSlot, Appointment, WaitingList
+
+# Student slot booking and waiting list view
+def book_slot(request):
+	if request.session.get('user_type') != 'student':
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	slots = CounsellorSlot.objects.filter(is_active=True)
+	booked_appointments = Appointment.objects.filter(student=student)
+	booked_slot_ids = [a.slot.id for a in booked_appointments]
+	slot_statuses = {a.slot.id: a.status for a in booked_appointments}
+	waiting_list = WaitingList.objects.filter(student=student)
+	waiting_slot_ids = [w.slot.id for w in waiting_list]
+	if request.method == 'POST':
+		slot_id = request.POST.get('slot_id')
+		slot = CounsellorSlot.objects.get(id=slot_id)
+		# Check if slot is already booked by another student
+		if Appointment.objects.filter(slot=slot, status='confirmed').exists():
+			# Add to waiting list if not already
+			if not WaitingList.objects.filter(slot=slot, student=student).exists():
+				WaitingList.objects.create(slot=slot, student=student)
+		else:
+			Appointment.objects.create(slot=slot, student=student, status='confirmed')
+		# Refresh data after booking
+		booked_appointments = Appointment.objects.filter(student=student)
+		booked_slot_ids = [a.slot.id for a in booked_appointments]
+		slot_statuses = {a.slot.id: a.status for a in booked_appointments}
+		waiting_list = WaitingList.objects.filter(student=student)
+		waiting_slot_ids = [w.slot.id for w in waiting_list]
+	return render(request, 'book_slot.html', {
+		'slots': slots,
+		'booked_slot_ids': booked_slot_ids,
+		'slot_statuses': slot_statuses,
+		'waiting_list': waiting_list,
+		'waiting_slot_ids': waiting_slot_ids,
+	})
 def signup(request):
 	if request.method == 'POST':
 		email = request.POST.get('email')
@@ -15,10 +92,18 @@ from .models import Student, Teacher
 
 from django.shortcuts import render
 
+from .models import SiteSetting
 def index(request):
-	if not request.session.get('user_type'):
+	user_type = request.session.get('user_type')
+	if user_type == 'student':
+		interval = 3600
+		if SiteSetting.objects.exists():
+			interval = SiteSetting.objects.first().quote_update_interval
+		return render(request, 'index.html', {'quote_update_interval': interval})
+	elif user_type == 'supervisor':
+		return redirect('supervisor_home')
+	else:
 		return redirect('login')
-	return render(request, 'index.html')
 
 def login(request):
 	if request.method == 'POST':
@@ -47,16 +132,36 @@ def login(request):
 				if teacher.password == password:
 					request.session['user_type'] = 'supervisor'
 					request.session['user_email'] = email
-					return redirect('admin')
+					return redirect('supervisor_home')
 			except Teacher.DoesNotExist:
 				pass
 			return render(request, 'login.html', {'error': 'Invalid supervisor credentials'})
 	return render(request, 'login.html')
 
-def admin_view(request):
+
+# Supervisor home view
+def supervisor_home(request):
 	if request.session.get('user_type') != 'supervisor':
 		return redirect('login')
-	return render(request, 'admin.html')
+	return render(request, 'supervisor_home.html')
+
+# Counsellor slot management view
+from .models import CounsellorSlot
+def counsellor_slot_management(request):
+	if request.session.get('user_type') != 'supervisor':
+		return redirect('login')
+	teacher = Teacher.objects.get(email=request.session['user_email'])
+	if request.method == 'POST':
+		CounsellorSlot.objects.create(
+			counsellor_name=request.POST['counsellor_name'],
+			specialization=request.POST['specialization'],
+			day=request.POST['day'],
+			start_time=request.POST['start_time'],
+			end_time=request.POST['end_time'],
+			created_by=teacher
+		)
+	slots = CounsellorSlot.objects.filter(created_by=teacher)
+	return render(request, 'counsellor_slot_management.html', {'slots': slots})
 
 from .models import JournalEntry
 
@@ -103,3 +208,7 @@ def wellness(request):
 	if not request.session.get('user_type'):
 		return redirect('login')
 	return render(request, 'wellness.html')
+
+def logout_view(request):
+		request.session.flush()
+		return redirect('login')

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Student Mental Health | Home</title>
+  {% block extra_css %}{% endblock %}
   <style>
     :root{
       --bg: #f6f8ff;
@@ -70,22 +71,32 @@
 <body>
   <header>
     <div class="container nav">
-      <div class="brand"><div class="logo" aria-hidden="true"></div><span>CampusCare</span></div>
+  <div class="brand"><div class="logo" aria-hidden="true"></div><span>Soulence</span></div>
       <nav aria-label="Primary">
+        {% if request.session.user_type == 'supervisor' %}
+        <ul>
+          <li><a class="active" href="/supervisor/home/">Home</a></li>
+          <li><a href="/supervisor/counsellor/">Counsellor</a></li>
+          <li><a href="/supervisor/appointments/">Appointments</a></li>
+          <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
+        </ul>
+        {% else %}
         <ul>
           <li><a class="active" href="/">Home</a></li>
           <li><a href="/support/">Support Hub</a></li>
+          <li><a href="/book-slot/">Book Appointment</a></li>
           <li><a href="/wellness/">Wellness Hub</a></li>
           <li><a href="/peer/">Peer Support</a></li>
           <li><a href="/myspace/">My Space</a></li>
-          <li><a href="/admin/">Admin</a></li>
-          <li><a href="/login/">Login</a></li>
+          <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
         </ul>
+        {% endif %}
       </nav>
     </div>
   </header>
 
   <main class="container" id="top">
+    {% block content %}
     <section class="hero">
       <article class="card">
         <h1>Your space for mental wellness</h1>
@@ -94,8 +105,26 @@
         <div style="margin-top:14px"><small class="subtitle">No sign-up required. You can stop at any time.</small></div>
       </article>
       <aside class="card qotd" id="quote">
-        <p>“You don’t have to control your thoughts. You just have to stop letting them control you.” — Dan Millman</p>
+        <p id="quote-text">Loading quote...</p>
+        <p id="quote-author" style="text-align:right;font-size:15px;color:var(--muted)"></p>
       </aside>
+      <script>
+        async function fetchQuote() {
+          try {
+            const res = await fetch('/api/quote/');
+            const data = await res.json();
+            document.getElementById('quote-text').textContent = '“' + data.quote + '”';
+            document.getElementById('quote-author').textContent = data.author ? '— ' + data.author : '';
+          } catch {
+            document.getElementById('quote-text').textContent = 'Unable to load quote.';
+            document.getElementById('quote-author').textContent = '';
+          }
+        }
+        fetchQuote();
+        // The interval will be injected by Django context
+        let quoteInterval = {{ quote_update_interval|default:3600 }} * 1000;
+        setInterval(fetchQuote, quoteInterval);
+      </script>
     </section>
 
     <section class="card mood" id="mood">
@@ -128,6 +157,7 @@
         </a>
       </div>
     </section>
+    {% endblock %}
   </main>
 
   <footer>
@@ -138,7 +168,7 @@
         <span class="tag">National Lifeline: 988 (US)</span>
         <span class="tag">Text: HOME to 741741</span>
       </div>
-      <small>© <span id="year"></span> CampusCare • contact@campuscare.example</small>
+  <small>© <span id="year"></span> Soulence • contact@soulence.example</small>
     </div>
   </footer>
 

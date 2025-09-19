@@ -1,0 +1,51 @@
+{% extends "index.html" %}
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <h1 style="margin-bottom: 8px;">Book a Counsellor Slot</h1>
+  <p class="subtitle" style="margin-bottom: 28px;">Browse available slots and book your appointment with a campus counsellor. Your bookings and waiting list are shown below.</p>
+
+  <h2 style="margin-top: 0;">Available Slots</h2>
+  <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+    {% for slot in slots %}
+      <div class="card" style="padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-left: 6px solid {% if slot.id in booked_slot_ids %}#22c55e{% elif slot.id in waiting_slot_ids %}#f59e42{% elif slot.is_active %}#6c7bff{% else %}#cbd5e1{% endif %};">
+        <div style="flex: 1 1 300px;">
+          <div style="font-size: 18px; font-weight: 600; margin-bottom: 2px;">{{ slot.counsellor_name }} <span style="font-size:14px; color:var(--muted);">({{ slot.specialization }})</span></div>
+          <div style="color:var(--muted); font-size:15px; margin-bottom: 6px;">🗓️ {{ slot.day }} &nbsp; ⏰ {{ slot.start_time }} - {{ slot.end_time }}</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          {% if slot.is_active %}
+            {% if slot.id in booked_slot_ids %}
+              <span style="background:#22c55e;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">Booked ({{ slot_statuses.slot.id }})</span>
+            {% elif slot.id in waiting_slot_ids %}
+              <span style="background:#f59e42;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">In Waiting List</span>
+            {% else %}
+              <form method="post" style="margin:0;display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                <button class="btn" type="submit" style="font-size:15px;">Book</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <span style="background:#cbd5e1;color:#64748b;padding:6px 14px;border-radius:999px;font-size:14px;">Inactive</span>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="card" style="padding: 20px; text-align:center; color:var(--muted);">No slots available.</div>
+    {% endfor %}
+  </div>
+
+  <h2 style="margin-top:36px;">Your Waiting List</h2>
+  <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 32px;">
+    {% for w in waiting_list %}
+      <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-left: 5px solid #f59e42;">
+        <span style="font-size:18px; font-weight:500;">{{ w.slot.counsellor_name }}</span>
+        <span style="color:var(--muted); font-size:15px;">({{ w.slot.specialization }})</span>
+        <span style="margin-left:auto; color:var(--muted); font-size:15px;">🗓️ {{ w.slot.day }} &nbsp; ⏰ {{ w.slot.start_time }}-{{ w.slot.end_time }}</span>
+      </div>
+    {% empty %}
+      <div class="card" style="padding: 16px; text-align:center; color:var(--muted);">No waiting list entries.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="container">
+  <h1>My Appointments & Status</h1>
+  <nav>
+    <ul style="display:flex;gap:20px;list-style:none;padding:0;">
+      <li><a href="/">Home</a></li>
+      <li><a href="/myspace/">My Space</a></li>
+      <li><a href="/support/">Support Hub</a></li>
+      <li><a href="/wellness/">Wellness Hub</a></li>
+      <li><a href="/logout/">Logout</a></li>
+    </ul>
+  </nav>
+  <h2>My Appointments</h2>
+  <ul>
+    {% for appt in appointments %}
+      <li>
+        {{ appt.slot.counsellor_name }} ({{ appt.slot.specialization }}) - {{ appt.slot.day }} {{ appt.slot.start_time }}-{{ appt.slot.end_time }}<br>
+        Status: <strong>{{ appt.status }}</strong>
+      </li>
+    {% empty %}
+      <li>No appointments yet.</li>
+    {% endfor %}
+  </ul>
+  <h2>My Waiting List</h2>
+  <ul>
+    {% for w in waiting_list %}
+      <li>{{ w.slot.counsellor_name }} ({{ w.slot.specialization }}) - {{ w.slot.day }} {{ w.slot.start_time }}-{{ w.slot.end_time }}</li>
+    {% empty %}
+      <li>No waiting list entries.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

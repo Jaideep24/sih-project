@@ -43,58 +43,58 @@
 <body>
   <header>
     <div class="container nav">
-      <div class="brand"><div class="logo"></div><span>CampusCare</span></div>
+  <div class="brand"><div class="logo"></div><span>Soulence</span></div>
       <nav aria-label="Primary">
         <ul>
           <li><a href="/">Home</a></li>
-          <li><a class="active" href="support.html">Support Hub</a></li>
-          <li><a href="wellness.html">Wellness Hub</a></li>
-          <li><a href="peer.html">Peer Support</a></li>
-          <li><a href="myspace.html">My Space</a></li>
-          <li><a href="admin.html">Admin</a></li>
-          <li><a href="login.html">Login</a></li>
+    <li><a class="active" href="/support/">Support Hub</a></li>
+          <li><a href="/book-slot/">Book Appointment</a></li>
+    <li><a href="/wellness/">Wellness Hub</a></li>
+    <li><a href="/peer/">Peer Support</a></li>
+    <li><a href="/myspace/">My Space</a></li>
+    <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main class="container grid">
-    <section class="card chat" id="chat">
+
+  <main class="container">
+    <section class="card chat" id="chat" style="max-width: 700px; margin: 40px auto;">
       <header><h2>AI Chat</h2></header>
       <div id="messages" class="messages" aria-live="polite"></div>
+      <style>
+        .loading-bubble {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 10px 16px;
+          background: #eef2ff;
+          color: #111827;
+          border-radius: 12px;
+          margin: 4px 0 0 0;
+          min-width: 48px;
+        }
+        .loading-bubble span {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          background: #6c7bff;
+          border-radius: 50%;
+          animation: bounce 1s infinite alternate;
+        }
+        .loading-bubble span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-bubble span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+          0% { transform: translateY(0); opacity: 0.7; }
+          100% { transform: translateY(-8px); opacity: 1; }
+        }
+      </style>
       <div class="composer">
         <input id="chatInput" type="text" placeholder="Ask anything..." />
         <button id="sendBtn" class="btn">Send</button>
       </div>
     </section>
-
-    <aside class="card" id="booking">
-      <form class="booking" id="bookingForm">
-        <h2 style="margin:0 0 6px">Book Appointment</h2>
-        <p style="margin:0;color:var(--muted)">Pick a date, time, and counsellor.</p>
-        <div class="row">
-          <div>
-            <label for="date">Date</label>
-            <input id="date" type="date" required />
-          </div>
-          <div>
-            <label for="time">Time</label>
-            <input id="time" type="time" required />
-          </div>
-        </div>
-        <div>
-          <label for="c">Counsellor</label>
-          <select id="c" required>
-            <option value="">Select...</option>
-            <option>Dr. Patel</option>
-            <option>Ms. Rivera</option>
-            <option>Mr. Chen</option>
-          </select>
-        </div>
-        <button class="btn" type="submit">Confirm Booking</button>
-        <small style="color:var(--muted)">A calendar invite will be sent in a future integration.</small>
-      </form>
-    </aside>
   </main>
 
   <script>
@@ -119,6 +119,26 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
+    // Add and remove loading animation
+    let loadingDiv = null;
+    function showLoading() {
+      if (loadingDiv) return;
+      loadingDiv = document.createElement('div');
+      loadingDiv.className = 'msg bot';
+      loadingDiv.setAttribute('id', 'loading-bubble');
+      loadingDiv.innerHTML = `<div class="loading-bubble" aria-label="AI is typing">
+        <span></span><span></span><span></span>
+      </div>`;
+      messages.appendChild(loadingDiv);
+      messages.scrollTop = messages.scrollHeight;
+    }
+    function hideLoading() {
+      if (loadingDiv) {
+        loadingDiv.remove();
+        loadingDiv = null;
+      }
+    }
+
     // Replace with your n8n chatbot API endpoint
     const N8N_API_URL = 'https://jaideep2404.app.n8n.cloud/webhook/33fb3d28-1c39-4ccf-b4c5-04b45a09cf33';
 
@@ -127,6 +147,7 @@
       if(!v) return;
       addMsg(v,'user');
       input.value = '';
+      showLoading();
       try {
         const res = await fetch(N8N_API_URL, {
           method: 'POST',
@@ -136,8 +157,10 @@
           body: JSON.stringify({ message: v })
         });
         const data = await res.json();
+        hideLoading();
         addMsg(data.output || 'Sorry, no response from chatbot.','bot');
       } catch (err) {
+        hideLoading();
         addMsg('Error contacting chatbot API.','bot');
       }
     }
@@ -147,14 +170,7 @@
 
     addMsg('Hi! I\'m here to listen. How are you feeling today?','bot');
 
-    document.getElementById('bookingForm').addEventListener('submit', (e)=>{
-      
-      const d = document.getElementById('date').value;
-      const t = document.getElementById('time').value;
-      const c = document.getElementById('c').value;
-      if(!d || !t || !c) return;
-      alert(`Booking confirmed:\n${d} at ${t}\nCounsellor: ${c}`);
-    });
+    // Booking form removed
   </script>
 </body>
 </html>
