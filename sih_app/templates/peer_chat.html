@@ -33,7 +33,7 @@
     <script>
         const apiKey = "{{ stream_api_key }}";
         const userId = "{{ student.student_id }}";
-        const userName = "{{ student.name|escapejs }}" || "{{ student.email|escapejs }}" || "Student_{{ student.student_id }}";
+        const userName = "{{ student.student_id }}" || "Student_{{ student.student_id }}";
         const userToken = "{{ stream_token }}";
         const channelId = "{{ room.id }}";
         const isActive = ("{{ room.is_active|yesno:'true,false' }}" === 'true');
@@ -92,7 +92,8 @@
                         const isMine = msg.user.id === userId;
                         const msgDiv = document.createElement('div');
                         msgDiv.className = isMine ? 'text-end mb-2' : 'text-start mb-2';
-                        msgDiv.innerHTML = `<span class="badge ${isMine ? 'bg-primary' : 'bg-secondary'}">${msg.user.name || msg.user.id}</span> <span>${msg.text}</span><br><small class="text-muted">${new Date(msg.created_at).toLocaleString()}</small>`;
+                        const displayName = msg.user.name || msg.user.id;
+                        msgDiv.innerHTML = `<span class="badge ${isMine ? 'bg-primary' : 'bg-secondary'}">${displayName}</span> <span>${msg.text}</span><br><small class="text-muted">${new Date(msg.created_at).toLocaleString()}</small>`;
                         messagesDiv.appendChild(msgDiv);
                     });
                     messagesDiv.scrollTop = messagesDiv.scrollHeight;

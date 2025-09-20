@@ -25,6 +25,12 @@ def end_stream_channel(room_id):
     channel.update({"status": "ended"})
     return channel
 
+def add_user_to_channel(room_id, user_id):
+    client = get_stream_client()
+    channel = client.channel("messaging", room_id)
+    channel.add_members([user_id])
+    return channel
+
 def generate_user_token(student_id):
     client = get_stream_client()
     return client.create_token(student_id)

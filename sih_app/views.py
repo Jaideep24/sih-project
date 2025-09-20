@@ -7,7 +7,7 @@ from .models import Student, Teacher, MoodEntry, Institution, SiteSetting, Journ
 from .models import CounsellorSlot, Appointment, WaitingList
 from .models import ChatRoom, ChatRoomMembership
 from .forms import ChatRoomCreateForm
-from .streamchat_api import create_stream_channel, end_stream_channel, generate_user_token
+from .streamchat_api import create_stream_channel, end_stream_channel, generate_user_token, add_user_to_channel
 
 def peer(request):
 	if not request.session.get('user_type'):
@@ -50,7 +50,15 @@ def peer_chat(request, room_id):
 	student = Student.objects.get(email=request.session['user_email'])
 	room = get_object_or_404(ChatRoom, id=room_id)
 	ChatRoomMembership.objects.get_or_create(room=room, student=student)
+	
+	# Add user to Stream Chat channel if they're not the creator
 	is_creator = (room.creator == student)
+	if not is_creator:
+		try:
+			add_user_to_channel(str(room.id), str(student.student_id))
+		except Exception as e:
+			print(f"Failed to add user to Stream channel: {e}")
+	
 	stream_token = generate_user_token(str(student.student_id))
 	return render(request, 'peer_chat.html', {
 		'room': room,
