@@ -28,6 +28,7 @@
     .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
     .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
     .logo{width:38px;height:38px;border-radius:10px;background: linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow: var(--shadow)}
+  .logo{width:38px;height:38px;border-radius:10px;background: url('https://i.ibb.co/jStfNMs/Soulence-logo.jpg') center/cover no-repeat, linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow: var(--shadow)}
     nav ul{display:flex;flex-wrap:wrap;gap:14px;list-style:none;padding:0;margin:0}
     nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
     nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
@@ -67,15 +68,16 @@
 <body>
   <header>
     <div class="container nav">
-      <div class="brand"><div class="logo"></div><span>Soulence</span></div>
+      <div class="brand"><div class="logo" aria-hidden="true"></div><span>Soulence</span></div>
       <nav aria-label="Primary">
         <ul>
-          <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-          <li><a href="{% url 'myspace' %}">My Space</a></li>
-          <li><a href="{% url 'peer' %}" class="active">Peer Support</a></li>
-          <li><a href="{% url 'support' %}">Counsellor</a></li>
-          <li><a href="{% url 'wellness' %}">Wellness</a></li>
-          <li><a href="{% url 'logout' %}">Logout</a></li>
+          <li><a href="/">Home</a></li>
+          <li><a href="/support/">Support Hub</a></li>
+          <li><a href="/book-slot/">Book Appointment</a></li>
+          <li><a href="/wellness/">Wellness Hub</a></li>
+          <li><a href="/peer/" class="active">Peer Support</a></li>
+          <li><a href="/myspace/">My Space</a></li>
+          <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
         </ul>
       </nav>
     </div>
