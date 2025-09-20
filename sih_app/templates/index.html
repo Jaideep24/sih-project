@@ -122,15 +122,15 @@
         }
         fetchQuote();
         // The interval will be injected by Django context
-        let quoteInterval = {{ quote_update_interval|default:3600 }} * 1000;
-        setInterval(fetchQuote, quoteInterval);
+  let quoteInterval = Number('{{ quote_update_interval|default:3600 }}') * 1000;
+  setInterval(fetchQuote, quoteInterval);
       </script>
     </section>
 
     <section class="card mood" id="mood">
       <div>
         <h2 style="margin:0 0 4px">How are you feeling today?</h2>
-        <small>Pick a mood and save it to your private history (stored only in your browser).</small>
+        <small>Pick a mood and save it to your private history (now stored securely in your account).</small>
       </div>
       <div class="scale" aria-hidden="true"><span>😞</span><span>😐</span><span>🙂</span><span>😊</span><span>🤩</span></div>
       <input id="moodRange" class="range" type="range" min="1" max="5" step="1" value="3" aria-label="Mood slider" />
@@ -173,31 +173,31 @@
   </footer>
 
   <script>
-    const MOOD_KEY = 'smh_moods';
+
     const range = document.getElementById('moodRange');
     const status = document.getElementById('moodStatus');
     const saveBtn = document.getElementById('saveMood');
 
-    function loadMoods(){
-      try{ return JSON.parse(localStorage.getItem(MOOD_KEY)||'[]') }catch{ return [] }
-    }
-    function saveMoods(list){ localStorage.setItem(MOOD_KEY, JSON.stringify(list)) }
-
-    saveBtn.addEventListener('click', ()=>{
-      const list = loadMoods();
-      list.push({ ts: Date.now(), mood: Number(range.value) });
-      saveMoods(list);
-      status.textContent = 'Saved ✔';
-      saveBtn.animate([{ transform:'scale(1)'},{ transform:'scale(1.05)'},{ transform:'scale(1)'}],{duration:300});
-    });
-
-    (function(){
-      const list = loadMoods();
-      if(list.length){
-        const last = list[list.length-1];
-        status.textContent = `Last saved: ${new Date(last.ts).toLocaleString()} (mood ${last.mood})`;
+    saveBtn.addEventListener('click', async ()=>{
+      const mood = Number(range.value);
+      status.textContent = 'Saving...';
+      try {
+        const res = await fetch('/api/save_mood/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `mood=${mood}`
+        });
+        const data = await res.json();
+        if (data.success) {
+          status.textContent = 'Saved ✔';
+          saveBtn.animate([{ transform:'scale(1)'},{ transform:'scale(1.05)'},{ transform:'scale(1)'}],{duration:300});
+        } else {
+          status.textContent = 'Error: ' + (data.error || 'Could not save');
+        }
+      } catch {
+        status.textContent = 'Error saving mood';
       }
-    })();
+    });
 
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>

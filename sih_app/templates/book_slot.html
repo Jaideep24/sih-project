@@ -1,4 +1,7 @@
 {% extends "index.html" %}
+{% load static %}
+{% load custom_filters %}
+
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
   <h1 style="margin-bottom: 8px;">Book a Counsellor Slot</h1>
@@ -15,7 +18,57 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           {% if slot.is_active %}
             {% if slot.id in booked_slot_ids %}
-              <span style="background:#22c55e;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">Booked ({{ slot_statuses.slot.id }})</span>
+              {% with status=slot_statuses|get_item:slot.id %}
+                {% if status == 'confirmed' %}
+                  <span style="background:#22c55e;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">Confirmed</span>
+                  <button class="video-call-btn" style="margin-left:10px;background:#2563eb;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;border:none;cursor:pointer;">Make a Video Call</button>
+                {% elif status == 'completed' %}
+                  <span style="background:#2563eb;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">Completed</span>
+                {% elif status == 'cancelled' %}
+                  <span style="background:#ef4444;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">Cancelled</span>
+                {% else %}
+                  <span style="background:#64748b;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">Pending</span>
+                {% endif %}
+              {% endwith %}
+<script>
+
+// Modal popup logic
+document.addEventListener('DOMContentLoaded', function() {
+  // Create modal HTML
+  var modal = document.createElement('div');
+  modal.id = 'feature-modal';
+  modal.style.display = 'none';
+  modal.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:32px 28px 24px 28px;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,0.12);min-width:280px;max-width:90vw;text-align:center;position:relative;">
+        <div style="font-size:22px;font-weight:600;margin-bottom:12px;">Feature coming soon.</div>
+        <div style="font-size:15px;color:#64748b;margin-bottom:18px;">Video call appointments will be available in a future update.</div>
+        <button id="close-feature-modal" style="background:#2563eb;color:#fff;padding:8px 22px;border-radius:999px;font-size:15px;border:none;cursor:pointer;">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  function showModal() {
+    modal.style.display = 'block';
+  }
+  function hideModal() {
+    modal.style.display = 'none';
+  }
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('video-call-btn')) {
+      showModal();
+    }
+    if (e.target && e.target.id === 'close-feature-modal') {
+      hideModal();
+    }
+    // Click outside modal closes it
+    if (e.target && e.target.id === 'feature-modal') {
+      hideModal();
+    }
+  });
+});
+</script>
             {% elif slot.id in waiting_slot_ids %}
               <span style="background:#f59e42;color:#fff;padding:6px 14px;border-radius:999px;font-size:14px;">In Waiting List</span>
             {% else %}

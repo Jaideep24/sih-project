@@ -59,15 +59,9 @@
 
       <form id="f-student" autocomplete="on" method="POST">
         {% csrf_token %}
-        <div class="row">
-          <div>
-            <label for="s-email">Email</label>
-            <input id="s-email" type="email" name="email" required placeholder="you@school.edu">
-          </div>
-          <div>
-            <label for="s-id">Student ID</label>
-            <input id="s-id" type="text" name="student_id" required placeholder="e.g., S1234567">
-          </div>
+        <div>
+          <label for="s-email">Email</label>
+          <input id="s-email" type="email" name="email" required placeholder="you@school.edu">
         </div>
         <div>
           <label for="s-pass">Password</label>

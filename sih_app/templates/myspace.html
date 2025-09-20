@@ -54,10 +54,24 @@
   </header>
 
   <main class="container grid">
+    <!-- Profile Card -->
+    {% if student %}
+    <section class="card" style="grid-column:1/-1;display:flex;align-items:center;gap:28px;margin-bottom:18px;background:linear-gradient(90deg,#f6f8ff 60%,#e0e7ff 100%);box-shadow:0 4px 24px rgba(108,123,255,0.08);">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#6c7bff,#9b8cff);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:700;box-shadow:0 2px 12px #6c7bff22;">
+        {{ student.email|slice:":1"|upper }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:22px;font-weight:700;letter-spacing:.5px;">{{ student.email }}</div>
+        <div style="color:var(--muted);font-size:15px;margin:2px 0 6px 0;">Student ID: <b>{{ student.student_id }}</b></div>
+        {% if student.institution %}<div style="color:#6c7bff;font-size:15px;">Institution: <b>{{ student.institution.name }}</b></div>{% endif %}
+      </div>
+    </section>
+    {% endif %}
     <section class="card">
       <h2 style="margin:0 0 8px">Mood History</h2>
       <div id="chart" class="chart" aria-label="Mood chart"></div>
-      <small style="color:var(--muted)">Showing your last 14 entries.</small>
+  <small style="color:var(--muted)">Showing your last 14 entries.</small>
+  <div id="moodHistoryList" style="margin-top:18px;display:grid;gap:10px"></div>
     </section>
 
     <section class="card">
@@ -81,46 +95,43 @@
   </main>
 
   <script>
-    const MOOD_KEY='smh_moods';
-    const J_KEY='smh_journal';
-
-    function load(key, fallback){ try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback} }
-    function save(key, v){ localStorage.setItem(key, JSON.stringify(v)) }
-
     const chart = document.getElementById('chart');
-    function renderChart(){
-      const list = load(MOOD_KEY, []).slice(-14);
-      chart.innerHTML='';
-      if(!list.length){ chart.innerHTML='<small style="color:#64748b">No moods saved yet. Go to Home and save one.</small>'; return; }
-      list.forEach((m,i)=>{
-        const h = 20 + (m.mood*20);
-        const bar = document.createElement('div');
-        bar.className='bar';
-        bar.style.height = h+'px';
-        bar.title = new Date(m.ts).toLocaleString()+` • mood ${m.mood}`;
-        chart.appendChild(bar);
-      })
+    async function renderChart() {
+      chart.innerHTML = '<small style="color:#64748b">Loading...</small>';
+      const moodHistoryList = document.getElementById('moodHistoryList');
+      moodHistoryList.innerHTML = '';
+      try {
+        const res = await fetch('/api/mood_history/');
+        const data = await res.json();
+        if (data.success && data.history.length) {
+          const moods = data.history.slice(0, 14).reverse();
+          chart.innerHTML = '';
+          moods.forEach((m, i) => {
+            const h = 20 + (m.mood * 20);
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = h + 'px';
+            bar.title = `${m.timestamp} • mood ${m.mood}`;
+            chart.appendChild(bar);
+          });
+          // Mood history cards
+          moods.forEach((m) => {
+            const card = document.createElement('div');
+            card.className = 'entry';
+            card.innerHTML = `<div><strong>Mood:</strong> ${m.mood}</div><div class="meta">${m.timestamp}</div>`;
+            moodHistoryList.appendChild(card);
+          });
+        } else {
+          chart.innerHTML = '<small style="color:#64748b">No moods saved yet. Use the Home page to save one.</small>';
+          moodHistoryList.innerHTML = '<div class="entry"><div>No mood history yet.</div></div>';
+        }
+      } catch {
+        chart.innerHTML = '<small style="color:#64748b">Error loading mood history.</small>';
+        moodHistoryList.innerHTML = '<div class="entry"><div>Error loading mood history.</div></div>';
+      }
     }
-
-    const entriesEl = document.getElementById('entries');
-    function renderEntries(){
-      const list = load(J_KEY, []).slice().reverse();
-      entriesEl.innerHTML = list.map(e=>`<div class=entry><div>${e.text}</div><div class=meta>${new Date(e.ts).toLocaleString()}</div></div>`).join('');
-    }
-
-    document.getElementById('jForm').addEventListener('submit', (e)=>{
-      const text = document.getElementById('jText').value.trim();
-      if(!text) return;
-      const list = load(J_KEY, []);
-      list.push({ts:Date.now(), text});
-      save(J_KEY, list);
-      document.getElementById('jText').value='';
-      renderEntries();
-    });
-    // Removed JS blocking form submission. Form now POSTs to backend for journal entry.
 
     renderChart();
-    renderEntries();
   </script>
 </body>
 </html>

@@ -1,22 +1,71 @@
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.http import HttpResponseRedirect
+from .models import Student, Teacher, MoodEntry
+from .models import CounsellorSlot, Appointment, WaitingList
+from .models import Institution
+from .models import SiteSetting
+from .models import JournalEntry
+
+# Dashboard view
 def dashboard(request):
-	return render(request, 'dashboard.html')
-# Student: view appointments and waiting list status
-def student_appointments(request):
-	if request.session.get('user_type') != 'student':
+	# Only supervisors can view dashboard
+	if request.session.get('user_type') != 'supervisor':
 		return redirect('login')
-	student = Student.objects.get(email=request.session['user_email'])
-	appointments = Appointment.objects.filter(student=student)
-	waiting_list = WaitingList.objects.filter(student=student)
-	return render(request, 'student_appointments.html', {
-		'appointments': appointments,
-		'waiting_list': waiting_list,
+	teacher = Teacher.objects.get(email=request.session['user_email'])
+	institution = teacher.institution
+
+	# Get filter from GET params
+	time_filter = request.GET.get('range', 'today')
+	from datetime import datetime, timedelta
+	now = datetime.now()
+	if time_filter == 'today':
+		start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+	elif time_filter == 'weekly':
+		start = now - timedelta(days=now.weekday())
+		start = start.replace(hour=0, minute=0, second=0, microsecond=0)
+	elif time_filter == 'monthly':
+		start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+	else:
+		start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+	# Get all students in institution
+	students = Student.objects.filter(institution=institution)
+	moods = []
+	from collections import Counter
+	if students.exists():
+		moods = list(
+			MoodEntry.objects.filter(student__in=students, timestamp__gte=start)
+			.values_list('mood', flat=True)
+		)
+	mood_counts = Counter(moods)
+	# Map mood int to label/color
+	mood_map = [
+		{'label': 'Mood 1', 'color': '#6c7bff', 'emoji': '😃'},
+		{'label': 'Mood 2', 'color': '#22c55e', 'emoji': '🙂'},
+		{'label': 'Mood 3', 'color': '#f59e0b', 'emoji': '😐'},
+		{'label': 'Mood 4', 'color': '#ef4444', 'emoji': '😕'},
+		{'label': 'Mood 5', 'color': '#6366f1', 'emoji': '😢'},
+	]
+	mood_stats = []
+	total = sum(mood_counts.values())
+	for i, m in enumerate(mood_map):
+		count = mood_counts.get(i+1, 0)
+		percent = (count/total*100) if total else 0
+		mood_stats.append({'label': m['label'], 'color': m['color'], 'count': count, 'percent': round(percent,1), 'emoji': m['emoji']})
+
+	return render(request, 'dashboard.html', {
+		'mood_stats': mood_stats,
+		'time_filter': time_filter,
 	})
+
 # Supervisor: manage appointments and waiting list
 def supervisor_appointments(request):
 	if request.session.get('user_type') != 'supervisor':
 		return redirect('login')
 	teacher = Teacher.objects.get(email=request.session['user_email'])
 	slots = CounsellorSlot.objects.filter(created_by=teacher)
+	# Only show appointments and waiting list for slots created by this supervisor (their own institution)
 	appointments = Appointment.objects.filter(slot__in=slots)
 	waiting_list = WaitingList.objects.filter(slot__in=slots)
 	if request.method == 'POST':
@@ -27,8 +76,9 @@ def supervisor_appointments(request):
 		elif 'waiting_id' in request.POST:
 			waiting = WaitingList.objects.get(id=request.POST['waiting_id'])
 			if request.POST.get('action') == 'confirm':
-				# Confirm this student, create appointment, remove from waiting list
-				Appointment.objects.create(slot=waiting.slot, student=waiting.student, status='confirmed')
+				# Only create appointment if not already present for this slot/student
+				if not Appointment.objects.filter(slot=waiting.slot, student=waiting.student).exists():
+					Appointment.objects.create(slot=waiting.slot, student=waiting.student, status='confirmed')
 				waiting.delete()
 			elif request.POST.get('action') == 'remove':
 				waiting.delete()
@@ -39,22 +89,22 @@ def supervisor_appointments(request):
 		'appointments': appointments,
 		'waiting_list': waiting_list,
 	})
-from .models import CounsellorSlot, Appointment, WaitingList
 
 # Student slot booking and waiting list view
 def book_slot(request):
 	if request.session.get('user_type') != 'student':
 		return redirect('login')
 	student = Student.objects.get(email=request.session['user_email'])
-	slots = CounsellorSlot.objects.filter(is_active=True)
-	booked_appointments = Appointment.objects.filter(student=student)
+	# Only show slots created by supervisors from the student's institution
+	slots = CounsellorSlot.objects.filter(is_active=True, created_by__institution=student.institution)
+	booked_appointments = Appointment.objects.filter(student=student, slot__created_by__institution=student.institution)
 	booked_slot_ids = [a.slot.id for a in booked_appointments]
 	slot_statuses = {a.slot.id: a.status for a in booked_appointments}
-	waiting_list = WaitingList.objects.filter(student=student)
+	waiting_list = WaitingList.objects.filter(student=student, slot__created_by__institution=student.institution)
 	waiting_slot_ids = [w.slot.id for w in waiting_list]
 	if request.method == 'POST':
 		slot_id = request.POST.get('slot_id')
-		slot = CounsellorSlot.objects.get(id=slot_id)
+		slot = CounsellorSlot.objects.get(id=slot_id, created_by__institution=student.institution)
 		# Check if slot is already booked by another student
 		if Appointment.objects.filter(slot=slot, status='confirmed').exists():
 			# Add to waiting list if not already
@@ -63,10 +113,10 @@ def book_slot(request):
 		else:
 			Appointment.objects.create(slot=slot, student=student, status='confirmed')
 		# Refresh data after booking
-		booked_appointments = Appointment.objects.filter(student=student)
+		booked_appointments = Appointment.objects.filter(student=student, slot__created_by__institution=student.institution)
 		booked_slot_ids = [a.slot.id for a in booked_appointments]
 		slot_statuses = {a.slot.id: a.status for a in booked_appointments}
-		waiting_list = WaitingList.objects.filter(student=student)
+		waiting_list = WaitingList.objects.filter(student=student, slot__created_by__institution=student.institution)
 		waiting_slot_ids = [w.slot.id for w in waiting_list]
 	return render(request, 'book_slot.html', {
 		'slots': slots,
@@ -75,24 +125,21 @@ def book_slot(request):
 		'waiting_list': waiting_list,
 		'waiting_slot_ids': waiting_slot_ids,
 	})
+
 def signup(request):
+	institutions = Institution.objects.all()
 	if request.method == 'POST':
 		email = request.POST.get('email')
 		password = request.POST.get('password')
 		student_id = request.POST.get('student_id')
+		institution_id = request.POST.get('institution')
 		if Student.objects.filter(email=email).exists():
-			return render(request, 'signup.html', {'error': 'Email already exists'})
-		Student.objects.create(email=email, password=password, student_id=student_id)
+			return render(request, 'signup.html', {'error': 'Email already exists', 'institutions': institutions})
+		institution = Institution.objects.get(id=institution_id) if institution_id else None
+		Student.objects.create(email=email, password=password, student_id=student_id, institution=institution)
 		return redirect('login')
-	return render(request, 'signup.html')
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.http import HttpResponseRedirect
-from .models import Student, Teacher
+	return render(request, 'signup.html', {'institutions': institutions})
 
-from django.shortcuts import render
-
-from .models import SiteSetting
 def index(request):
 	user_type = request.session.get('user_type')
 	if user_type == 'student':
@@ -107,14 +154,12 @@ def index(request):
 
 def login(request):
 	if request.method == 'POST':
-		# Determine which form was submitted by checking for unique fields
-		if request.POST.get('student_id'):
-			# Student login form
+		# Student login form (default)
+		if not request.POST.get('access_code'):
 			email = request.POST.get('email')
-			student_id = request.POST.get('student_id')
 			password = request.POST.get('password')
 			try:
-				student = Student.objects.get(email=email, student_id=student_id)
+				student = Student.objects.get(email=email)
 				if student.password == password:
 					request.session['user_type'] = 'student'
 					request.session['user_email'] = email
@@ -122,8 +167,8 @@ def login(request):
 			except Student.DoesNotExist:
 				pass
 			return render(request, 'login.html', {'error': 'Invalid student credentials'})
+		# Supervisor login form
 		elif request.POST.get('access_code'):
-			# Supervisor login form
 			email = request.POST.get('email')
 			access_code = request.POST.get('access_code')
 			password = request.POST.get('password')
@@ -143,10 +188,10 @@ def login(request):
 def supervisor_home(request):
 	if request.session.get('user_type') != 'supervisor':
 		return redirect('login')
-	return render(request, 'supervisor_home.html')
+	teacher = Teacher.objects.get(email=request.session['user_email'])
+	return render(request, 'supervisor_home.html', {'teacher': teacher})
 
 # Counsellor slot management view
-from .models import CounsellorSlot
 def counsellor_slot_management(request):
 	if request.session.get('user_type') != 'supervisor':
 		return redirect('login')
@@ -162,8 +207,6 @@ def counsellor_slot_management(request):
 		)
 	slots = CounsellorSlot.objects.filter(created_by=teacher)
 	return render(request, 'counsellor_slot_management.html', {'slots': slots})
-
-from .models import JournalEntry
 
 def myspace(request):
 	if not request.session.get('user_type'):
@@ -183,7 +226,7 @@ def myspace(request):
 			JournalEntry.objects.create(student=student, entry_text=entry_text)
 			# Refresh entries after new entry
 			entries = JournalEntry.objects.filter(student=student).order_by('-date', '-time')
-	return render(request, 'myspace.html', {'entries': entries})
+	return render(request, 'myspace.html', {'entries': entries, 'student': student})
 
 def peer(request):
 	if not request.session.get('user_type'):
@@ -199,7 +242,6 @@ def support(request):
 		counsellor = request.POST.get('counsellor')
 		user = request.session.get('user_email', 'Anonymous')
 		if date and time and counsellor:
-			from .models import Appointment
 			Appointment.objects.create(user=user, date=date, time=time, counsellor=counsellor)
 			return render(request, 'support.html', {'success': 'Booking confirmed!'})
 	return render(request, 'support.html')
@@ -212,3 +254,16 @@ def wellness(request):
 def logout_view(request):
 		request.session.flush()
 		return redirect('login')
+
+# Student appointments view
+def student_appointments(request):
+	if request.session.get('user_type') != 'student':
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	# Only show appointments and waiting list for slots created by supervisors from the student's institution
+	appointments = Appointment.objects.filter(student=student, slot__created_by__institution=student.institution)
+	waiting_list = WaitingList.objects.filter(student=student, slot__created_by__institution=student.institution)
+	return render(request, 'student_appointments.html', {
+		'appointments': appointments,
+		'waiting_list': waiting_list,
+	})

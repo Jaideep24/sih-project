@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Details | Supervisor</title>
+  <style>
+    :root{--bg:#f6f8ff;--card:#fff;--ink:#0f2238;--muted:#58708d;--primary:#6c7bff;--p2:#9b8cff;--shadow:0 10px 30px rgba(15,34,56,.08);--radius:14px}
+    html,body{margin:0;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial}
+    body{background:linear-gradient(180deg,#f6f8ff,#fff)}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:900px;margin:0 auto;padding:0 20px}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.7);backdrop-filter: blur(10px);border-bottom:1px solid #eef2ff}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+    .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--p2));box-shadow:var(--shadow)}
+    nav ul{display:flex;gap:14px;list-style:none;margin:0;padding:0}
+    nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
+    nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
+    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    .entry{padding:6px 10px;border-radius:8px;background:#f6f8ff;border:1px solid #e5e7eb;font-size:15px;margin-bottom:4px}
+    .btn{background:linear-gradient(135deg,var(--primary),var(--p2));color:#fff;border:none;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo"></div><span>Soulence</span></div>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/supervisor/home/">Home</a></li>
+          <li><a href="/supervisor/counsellor/">Counsellor</a></li>
+          <li><a href="/supervisor/appointments/">Appointments</a></li>
+          <li><a class="active" href="/supervisor/students/">Student Details</a></li>
+          <li><a href="/dashboard/">Dashboard</a></li>
+          <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="container" style="padding:24px 0">
+    <h1>Student Details</h1>
+    <form method="get" style="margin-bottom:18px;display:flex;gap:10px">
+      <input type="text" name="q" value="{{ query }}" placeholder="Search by Student ID" style="padding:8px 12px;border-radius:8px;border:1px solid #e5e7eb;flex:1">
+      <button class="btn" type="submit">Search</button>
+    </form>
+    <div style="display:grid;gap:18px">
+      {% for item in student_data %}
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <strong>Student ID:</strong> {{ item.student.student_id }}<br>
+              <strong>Name:</strong> {{ item.student.name|default:'-' }}
+            </div>
+            <button class="btn" onclick="showChatSummary('{{ item.student.student_id }}')">Chatbot Summary</button>
+          </div>
+          <div style="margin-top:10px">
+            <strong>Mood History:</strong>
+            {% if item.moods %}
+              <ul style="margin:8px 0 0 0;padding:0;list-style:none;display:grid;gap:4px">
+                {% for mood in item.moods %}
+                  <li class="entry">
+                    <span>Mood: {{ mood.mood }}</span> <span style="color:#718096;font-size:13px">({{ mood.timestamp|date:'Y-m-d H:i' }})</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <div style="color:#718096">No mood history.</div>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <div class="card">No students found.</div>
+      {% endfor %}
+    </div>
+  </main>
+  <script>
+  function showChatSummary(studentId) {
+    const popup = document.createElement('div');
+    popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;z-index:1000';
+    popup.innerHTML = `<div style='background:#fff;padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px #0002;max-width:350px;text-align:center'>
+      <h2>Chatbot Summary</h2>
+      <p>Feature Coming Soon</p>
+      <button class='btn' onclick='this.closest("div").parentNode.remove()' style='margin-top:18px'>Close</button>
+    </div>`;
+    document.body.appendChild(popup);
+  }
+  </script>
+</body>
+</html>

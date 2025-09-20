@@ -41,13 +41,27 @@
           <li><a class="active" href="/supervisor/home/">Home</a></li>
           <li><a href="/supervisor/counsellor/">Counsellor</a></li>
           <li><a href="/supervisor/appointments/">Appointments</a></li>
-            <li><a href="/dashboard/">Dashboard</a></li>
+          <li><a href="/supervisor/students/">Student Details</a></li>
+          <li><a href="/dashboard/">Dashboard</a></li>
           <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
         </ul>
       </nav>
     </div>
   </header>
   <main class="container">
+    <!-- Profile Card -->
+    {% if teacher %}
+    <section class="card" style="display:flex;align-items:center;gap:28px;margin-bottom:18px;background:linear-gradient(90deg,#f6f8ff 60%,#e0e7ff 100%);box-shadow:0 4px 24px rgba(108,123,255,0.08);">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#6c7bff,#9b8cff);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:700;box-shadow:0 2px 12px #6c7bff22;">
+        {{ teacher.email|slice:":1"|upper }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:22px;font-weight:700;letter-spacing:.5px;">{{ teacher.email }}</div>
+        <div style="color:var(--muted);font-size:15px;margin:2px 0 6px 0;">Access Code: <b>{{ teacher.access_code }}</b></div>
+        {% if teacher.institution %}<div style="color:#6c7bff;font-size:15px;">Institution: <b>{{ teacher.institution.name }}</b></div>{% endif %}
+      </div>
+    </section>
+    {% endif %}
     <section class="card">
       <h1>Welcome, Campus Supervisor!</h1>
       <h2>Supervisor Portal</h2>

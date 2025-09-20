@@ -12,11 +12,24 @@
     </ul>
   </nav>
   <h2>My Appointments</h2>
-  <ul>
+  <ul style="padding:0;list-style:none;max-width:600px">
     {% for appt in appointments %}
-      <li>
-        {{ appt.slot.counsellor_name }} ({{ appt.slot.specialization }}) - {{ appt.slot.day }} {{ appt.slot.start_time }}-{{ appt.slot.end_time }}<br>
-        Status: <strong>{{ appt.status }}</strong>
+      <li style="margin-bottom:18px;padding:14px 16px;background:#f6f8ff;border-radius:10px;border:1px solid #e5e7eb;">
+        <div style="font-weight:600">{{ appt.slot.counsellor_name }} ({{ appt.slot.specialization }})</div>
+        <div style="color:#64748b">{{ appt.slot.day }} {{ appt.slot.start_time }}-{{ appt.slot.end_time }}</div>
+        <div style="margin-top:6px">
+          {% if appt.status == 'confirmed' %}
+            <span style="color:#22c55e;font-weight:700"><span style="font-size:18px">✔️</span> Confirmed</span> <span class="meta">(Your booking is confirmed. Please attend on time.)</span>
+          {% elif appt.status == 'completed' %}
+            <span style="color:#6366f1;font-weight:700"><span style="font-size:18px">🏁</span> Completed</span> <span class="meta">(Session completed. Thank you for attending!)</span>
+          {% elif appt.status == 'cancelled' %}
+            <span style="color:#ef4444;font-weight:700"><span style="font-size:18px">❌</span> Cancelled</span> <span class="meta">(This appointment was cancelled by the supervisor.)</span>
+          {% elif appt.status == 'waiting' %}
+            <span style="color:#f59e0b;font-weight:700"><span style="font-size:18px">⏳</span> Waiting List</span> <span class="meta">(You are on the waiting list. You'll be notified if a slot opens.)</span>
+          {% else %}
+            <span style="color:#64748b;font-weight:700">{{ appt.status|capfirst }}</span>
+          {% endif %}
+        </div>
       </li>
     {% empty %}
       <li>No appointments yet.</li>

@@ -45,29 +45,45 @@
           <li><a class="active" href="/dashboard/">Dashboard</a></li>
           <li><a href="/supervisor/counsellor/">Counsellor</a></li>
           <li><a href="/supervisor/appointments/">Appointments</a></li>
+          <li><a href="/supervisor/students/">Student Details</a></li>
           <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
+
   <main class="container grid">
+    <section class="card" style="grid-column:1/-1">
+      <h2 style="margin:0 0 8px">Mood Distribution</h2>
+      <form method="get" style="margin-bottom:12px;display:inline-block">
+        <label for="range" style="font-weight:600;margin-right:8px">Stats for:</label>
+        <select name="range" id="range" onchange="this.form.submit()" style="padding:6px 12px;border-radius:8px;border:1px solid #e5e7eb">
+          <option value="today" {% if time_filter == 'today' %}selected{% endif %}>Today</option>
+          <option value="weekly" {% if time_filter == 'weekly' %}selected{% endif %}>This Week</option>
+          <option value="monthly" {% if time_filter == 'monthly' %}selected{% endif %}>This Month</option>
+        </select>
+      </form>
+      <div style="display:flex;align-items:center;gap:32px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="margin-bottom:8px">
+            <button type="button" class="btn" id="toggleChart" style="padding:6px 16px;font-size:15px">Switch to Bar Chart</button>
+          </div>
+          <canvas id="moodChart" width="260" height="220" style="max-width:260px;max-height:220px;"></canvas>
+        </div>
+        <div class="legend" style="margin-top:10px">
+          {% for m in mood_stats %}
+            <div class="leg"><span class="sw" style="background:{{ m.color }}"></span> Mood {{ forloop.counter }} {{ m.emoji }} ({{ m.percent }}%)</div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
     <section class="card">
-      <h2 style="margin:0 0 8px">Weekly Activity (dummy)</h2>
+      <h2 style="margin:0 0 8px">Weekly Activity</h2>
       <div class="bars" id="bars"></div>
       <small style="color:var(--muted)">Messages sent, resources viewed, games played.</small>
     </section>
-
-    <aside class="card">
-      <h2 style="margin:0 0 8px">Mood Distribution</h2>
-      <div class="donut"></div>
-      <div class="legend" style="margin-top:10px">
-        <div class="leg"><span class="sw" style="background:#6c7bff"></span> Positive (40%)</div>
-        <div class="leg"><span class="sw" style="background:#22c55e"></span> Neutral (30%)</div>
-        <div class="leg"><span class="sw" style="background:#f59e0b"></span> Slightly Low (20%)</div>
-        <div class="leg"><span class="sw" style="background:#ef4444"></span> Low (10%)</div>
-      </div>
-    </aside>
 
     <section class="card" style="grid-column:1/-1">
       <h2 style="margin:0 0 8px">Trends & Notes</h2>
@@ -75,7 +91,60 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // Mood Chart Toggle (Pie <-> Horizontal Bar)
+    const moodStats = {{ mood_stats|safe }};
+    // Add emoji mapping for Mood 1-5
+    const moodEmojis = ['😃','🙂','😐','😕','😢'];
+    moodStats.forEach((m,i)=>m.emoji = moodEmojis[i]||'');
+    let chartType = 'pie';
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    let chart = null;
+    function renderChart(type) {
+      if(chart) chart.destroy();
+      if(type==='pie') {
+        chart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: moodStats.map((m,i)=>`Mood ${i+1} ${m.emoji}`),
+            datasets: [{
+              data: moodStats.map(m=>m.count),
+              backgroundColor: moodStats.map(m=>m.color),
+            }]
+          },
+          options: {plugins:{legend:{display:false}}}
+        });
+        document.getElementById('toggleChart').textContent = 'Switch to Bar Chart';
+      } else {
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: moodStats.map((m,i)=>`Mood ${i+1} ${m.emoji}`),
+            datasets: [{
+              data: moodStats.map(m=>m.count),
+              backgroundColor: moodStats.map(m=>m.color),
+              borderRadius: 10,
+              barPercentage: 0.7,
+              categoryPercentage: 0.7
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            plugins:{legend:{display:false}},
+            scales:{x:{beginAtZero:true,grid:{display:false}},y:{grid:{display:false}}}
+          }
+        });
+        document.getElementById('toggleChart').textContent = 'Switch to Pie Chart';
+      }
+    }
+    renderChart(chartType);
+    document.getElementById('toggleChart').onclick = function(){
+      chartType = chartType==='pie' ? 'bar' : 'pie';
+      renderChart(chartType);
+    };
+
+    // Weekly Activity (dummy)
     const data = [18,26,22,30,15,28,35];
     const bars = document.getElementById('bars');
     data.forEach(v=>{
@@ -85,8 +154,6 @@
       b.title = v+' actions';
       bars.appendChild(b);
     });
-
-    // Future: Fetch anonymized metrics from backend
   </script>
 </body>
 </html>
