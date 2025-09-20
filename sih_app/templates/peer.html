@@ -1,48 +1,80 @@
 <!DOCTYPE html>
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Peer Support | Forums</title>
-  <style>
-    :root{--bg:#f6f8ff;--card:#fff;--ink:#0f2238;--muted:#58708d;--primary:#6c7bff;--p2:#9b8cff;--shadow:0 10px 30px rgba(15,34,56,.08);--radius:14px}
-    html,body{margin:0;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial}
-    body{background:linear-gradient(180deg,#f6f8ff,#fff)}
-    a{color:inherit;text-decoration:none}
-    .container{max-width:1100px;margin:0 auto;padding:0 20px}
-    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.7);backdrop-filter: blur(10px);border-bottom:1px solid #eef2ff}
-    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
-    .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--p2));box-shadow:var(--shadow)}
-    nav ul{display:flex;gap:14px;list-style:none;margin:0;padding:0}
-    nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
-    nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
-
-    .layout{display:grid;grid-template-columns:260px 1fr;gap:18px;margin:22px 0}
-    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-    .cats button{display:block;width:100%;text-align:left;padding:10px 12px;margin:6px 0;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer}
-    .cats button.active{background:linear-gradient(135deg,var(--primary),var(--p2));color:#fff;border-color:transparent}
-
-    .posts{display:grid;gap:10px}
-    .post{padding:12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff}
-    .meta{font-size:13px;color:#718096}
-
-    form.reply{display:grid;gap:10px;margin-top:10px}
-    textarea{width:100%;min-height:90px;padding:10px;border:1px solid #e5e7eb;border-radius:10px}
-    .btn{justify-self:start;background:linear-gradient(135deg,var(--primary),var(--p2));color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-
-    @media(max-width: 1000px){.layout{grid-template-columns:1fr}}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peer Support Chat Rooms</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
-  <header>
-    <div class="container nav">
-  <div class="brand"><div class="logo"></div><span>Soulence</span></div>
-      <nav aria-label="Primary">
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/support/">Support Hub</a></li>
-          <li><a href="/book-slot/">Book Appointment</a></li>
+  <div class="container mt-5" style="max-width: 700px;">
+    <h2 class="mb-4">Peer Support Chat Rooms</h2>
+    <div class="card mb-4">
+      <div class="card-header">Create a Chat Room</div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form_errors %}
+            <div class="alert alert-danger">
+              {% for field, errors in form_errors.items %}
+                {% for error in errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          {% endif %}
+          <div class="mb-3">
+            <label for="id_name" class="form-label">Room Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="text-danger small">{{ form.name.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="id_category" class="form-label">Category</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+              <div class="text-danger small">{{ form.category.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Create Room</button>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Active Chat Rooms</h5>
+        <ul class="list-group">
+          {% for room in active_rooms %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ room.name }} ({{ room.category }})</span>
+              <a href="{% url 'peer_chat' room.id %}" class="btn btn-success btn-sm">Join</a>
+            </li>
+          {% empty %}
+            <li class="list-group-item">No active chat rooms.</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Completed Chat Rooms</h5>
+        <ul class="list-group">
+          {% for room in completed_rooms %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ room.name }} ({{ room.category }})</span>
+              <a href="{% url 'peer_chat' room.id %}" class="btn btn-secondary btn-sm">View</a>
+            </li>
+          {% empty %}
+            <li class="list-group-item">No completed chat rooms.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
           <li><a href="/wellness/">Wellness Hub</a></li>
           <li><a class="active" href="/peer/">Peer Support</a></li>
           <li><a href="/myspace/">My Space</a></li>

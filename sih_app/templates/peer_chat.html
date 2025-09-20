@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer Chat Room</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Stream Chat CSS -->
+    <link href="https://unpkg.com/stream-chat-react@11.15.0/dist/css/v2/index.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Chat Room: {{ room.name }}</h2>
+        <p>Category: {{ room.category }}</p>
+        <div id="stream-chat-root">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading chat...</span>
+                </div>
+                <p>Connecting to chat...</p>
+            </div>
+        </div>
+        {% if is_creator and room.is_active %}
+        <form method="post" action="{% url 'end_chat_room' room.id %}" class="mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">End Chat Room</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'peer' %}" class="btn btn-link mt-3">Back to Rooms</a>
+    </div>
+    <!-- Stream Chat JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/stream-chat@8.40.0/dist/browser.full-bundle.min.js"></script>
+    <script>
+        const apiKey = "{{ stream_api_key }}";
+        const userId = "{{ student.student_id }}";
+        const userName = "{{ student.name|escapejs }}" || "{{ student.email|escapejs }}" || "Student_{{ student.student_id }}";
+        const userToken = "{{ stream_token }}";
+        const channelId = "{{ room.id }}";
+        const isActive = ("{{ room.is_active|yesno:'true,false' }}" === 'true');
+
+        console.log('Stream Chat Config:', { apiKey, userId, userName, channelId, isActive });
+        console.log('StreamChat available:', typeof window.StreamChat);
+
+        async function initStreamChat() {
+            try {
+                if (!apiKey || !userToken) {
+                    throw new Error('Missing API key or user token');
+                }
+                
+                // Check if StreamChat is available
+                if (typeof window.StreamChat === 'undefined') {
+                    throw new Error('Stream Chat library failed to load. Please check your internet connection.');
+                }
+                
+                const client = new window.StreamChat(apiKey);
+                
+                console.log('Connecting user to Stream Chat...');
+                await client.connectUser({
+                    id: userId,
+                    name: userName,
+                }, userToken);
+                
+                console.log('Getting channel...');
+                const channel = client.channel('messaging', channelId, {
+                    name: "{{ room.name|escapejs }}",
+                });
+                await channel.watch();
+                console.log('Channel loaded successfully');
+
+                // Basic chat UI rendering
+                const chatRoot = document.getElementById('stream-chat-root');
+                chatRoot.innerHTML = `
+                    <div class="alert alert-success">Connected to chat room successfully!</div>
+                    <div id="messages" style="height:350px; overflow-y:auto; background:#f8f9fa; border-radius:8px; padding:10px; margin-bottom:10px;"></div>
+                    <form id="send-form" class="d-flex">
+                        <input type="text" id="msg-input" class="form-control me-2" placeholder="Type your message..." autocomplete="off" ${isActive ? '' : 'disabled'}>
+                        <button type="submit" class="btn btn-primary" ${isActive ? '' : 'disabled'}>Send</button>
+                    </form>
+                `;
+                const messagesDiv = document.getElementById('messages');
+                const form = document.getElementById('send-form');
+                const input = document.getElementById('msg-input');
+
+                // Render messages
+                function renderMessages(messages) {
+                    messagesDiv.innerHTML = '';
+                    if (messages.length === 0) {
+                        messagesDiv.innerHTML = '<div class="text-muted text-center">No messages yet. Start the conversation!</div>';
+                        return;
+                    }
+                    messages.forEach(msg => {
+                        const isMine = msg.user.id === userId;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = isMine ? 'text-end mb-2' : 'text-start mb-2';
+                        msgDiv.innerHTML = `<span class="badge ${isMine ? 'bg-primary' : 'bg-secondary'}">${msg.user.name || msg.user.id}</span> <span>${msg.text}</span><br><small class="text-muted">${new Date(msg.created_at).toLocaleString()}</small>`;
+                        messagesDiv.appendChild(msgDiv);
+                    });
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+
+                // Initial load
+                renderMessages(channel.state.messages);
+
+                // Listen for new messages
+                channel.on('message.new', event => {
+                    console.log('New message received:', event.message);
+                    renderMessages(channel.state.messages);
+                });
+
+                // Send message
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!input.value.trim() || !isActive) return;
+                    try {
+                        console.log('Sending message:', input.value);
+                        await channel.sendMessage({ text: input.value });
+                        input.value = '';
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        alert('Failed to send message: ' + error.message);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Stream Chat initialization error:', error);
+                document.getElementById('stream-chat-root').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Chat connection failed</h5>
+                        <p>Error: ${error.message}</p>
+                        <p>Please check the console for more details.</p>
+                        <div class="mt-2">
+                            <small>Debug info: API Key: ${apiKey ? 'Present' : 'Missing'}, Token: ${userToken ? 'Present' : 'Missing'}, User: ${userId}</small>
+                        </div>
+                        <div class="mt-2">
+                            <small>StreamChat Library: ${typeof window.StreamChat !== 'undefined' ? 'Loaded' : 'Failed to load'}</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small delay to ensure the script has loaded
+            setTimeout(initStreamChat, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,32 @@
 
 from django.db import models
+from django.utils import timezone
+
+class ChatRoom(models.Model):
+	name = models.CharField(max_length=100)
+	category = models.CharField(max_length=50)
+	creator = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='created_rooms')
+	institution = models.ForeignKey('Institution', on_delete=models.CASCADE)
+	is_active = models.BooleanField(default=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	ended_at = models.DateTimeField(null=True, blank=True)
+
+	def __str__(self):
+		return f"{self.name} ({self.category}) - {self.institution.name}"
+
+class ChatRoomMembership(models.Model):
+	room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
+	student = models.ForeignKey('Student', on_delete=models.CASCADE)
+	joined_at = models.DateTimeField(default=timezone.now)
+
+	class Meta:
+		unique_together = ('room', 'student')
+
+	def __str__(self):
+		return f"{self.student} in {self.room}"
+
+
+
 # MoodEntry model for storing mood history in DB
 class MoodEntry(models.Model):
 	student = models.ForeignKey('Student', on_delete=models.CASCADE)
@@ -22,6 +49,7 @@ class Student(models.Model):
 	email = models.EmailField(unique=True)
 	student_id = models.CharField(max_length=20, unique=True)
 	password = models.CharField(max_length=128)
+	name = models.CharField(max_length=100, blank=True, default='')
 	institution = models.ForeignKey('Institution', on_delete=models.CASCADE, null=True, blank=True)
 	# Add more fields as needed
 

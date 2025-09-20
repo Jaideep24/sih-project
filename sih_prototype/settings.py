@@ -123,3 +123,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Stream Chat credentials
+STREAM_API_KEY = "ygzv4mky4dz3"
+STREAM_API_SECRET = "h4yq4uqqmahp48zvxs6b4dxbq4x3q9ute79uqkdsauwy2ky5z4durtv73g8v5ssq"

@@ -1,11 +1,75 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.http import HttpResponseRedirect
-from .models import Student, Teacher, MoodEntry
+from django.utils import timezone
+from django.conf import settings
+from .models import Student, Teacher, MoodEntry, Institution, SiteSetting, JournalEntry
 from .models import CounsellorSlot, Appointment, WaitingList
-from .models import Institution
-from .models import SiteSetting
-from .models import JournalEntry
+from .models import ChatRoom, ChatRoomMembership
+from .forms import ChatRoomCreateForm
+from .streamchat_api import create_stream_channel, end_stream_channel, generate_user_token
+
+def peer(request):
+	if not request.session.get('user_type'):
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	institution = student.institution
+	form = ChatRoomCreateForm()
+	form_errors = None
+	if request.method == 'POST':
+		form = ChatRoomCreateForm(request.POST)
+		if form.is_valid():
+			room = form.save(commit=False)
+			room.creator = student
+			room.institution = institution
+			room.save()
+			ChatRoomMembership.objects.create(room=room, student=student)
+			create_stream_channel(
+				str(room.id),
+				room.name,
+				str(student.student_id),
+				[str(student.student_id)],
+				room.category,
+			)
+			return redirect('peer_chat', room_id=room.id)
+		else:
+			form_errors = form.errors
+	active_rooms = ChatRoom.objects.filter(institution=institution, is_active=True)
+	completed_rooms = ChatRoom.objects.filter(institution=institution, is_active=False)
+	return render(request, 'peer.html', {
+		'active_rooms': active_rooms,
+		'completed_rooms': completed_rooms,
+		'form': form,
+		'form_errors': form_errors,
+		'student': student,
+	})
+
+def peer_chat(request, room_id):
+	if not request.session.get('user_type'):
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	room = get_object_or_404(ChatRoom, id=room_id)
+	ChatRoomMembership.objects.get_or_create(room=room, student=student)
+	is_creator = (room.creator == student)
+	stream_token = generate_user_token(str(student.student_id))
+	return render(request, 'peer_chat.html', {
+		'room': room,
+		'student': student,
+		'is_creator': is_creator,
+		'stream_api_key': settings.STREAM_API_KEY,
+		'stream_token': stream_token,
+	})
+
+def end_chat_room(request, room_id):
+	if not request.session.get('user_type'):
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	room = get_object_or_404(ChatRoom, id=room_id, creator=student)
+	room.is_active = False
+	room.ended_at = timezone.now()
+	room.save()
+	end_stream_channel(str(room.id))
+	return redirect('peer')
 
 # Dashboard view
 def dashboard(request):
@@ -227,11 +291,6 @@ def myspace(request):
 			# Refresh entries after new entry
 			entries = JournalEntry.objects.filter(student=student).order_by('-date', '-time')
 	return render(request, 'myspace.html', {'entries': entries, 'student': student})
-
-def peer(request):
-	if not request.session.get('user_type'):
-		return redirect('login')
-	return render(request, 'peer.html')
 
 def support(request):
 	if not request.session.get('user_type'):
