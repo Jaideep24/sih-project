@@ -49,13 +49,31 @@ def peer_chat(request, room_id):
 		return redirect('login')
 	student = Student.objects.get(email=request.session['user_email'])
 	room = get_object_or_404(ChatRoom, id=room_id)
-	ChatRoomMembership.objects.get_or_create(room=room, student=student)
+	
+	# Check if the room is still active
+	if not room.is_active:
+		from django.contrib import messages
+		messages.error(request, 'This chat room has ended and is no longer available.')
+		return redirect('peer')
+	
+	# Check if user is already a member (to determine if this is a new join)
+	membership, created = ChatRoomMembership.objects.get_or_create(room=room, student=student)
+	is_new_member = created
 	
 	# Add user to Stream Chat channel if they're not the creator
 	is_creator = (room.creator == student)
 	if not is_creator:
 		try:
-			add_user_to_channel(str(room.id), str(student.student_id))
+			# Only send join notification for new members
+			if is_new_member:
+				user_display_name = student.name if student.name else student.student_id
+				add_user_to_channel(str(room.id), str(student.student_id), user_display_name)
+			else:
+				# For existing members, just ensure they're in the channel without notification
+				from .streamchat_api import get_stream_client
+				client = get_stream_client()
+				channel = client.channel("team", str(room.id))  # Changed from "messaging" to "team"
+				channel.add_members([str(student.student_id)])
 		except Exception as e:
 			print(f"Failed to add user to Stream channel: {e}")
 	
@@ -76,7 +94,11 @@ def end_chat_room(request, room_id):
 	room.is_active = False
 	room.ended_at = timezone.now()
 	room.save()
-	end_stream_channel(str(room.id))
+	
+	# Pass creator name to end_stream_channel
+	creator_name = student.name if student.name else student.student_id
+	end_stream_channel(str(room.id), creator_name)
+	
 	return redirect('peer')
 
 # Dashboard view

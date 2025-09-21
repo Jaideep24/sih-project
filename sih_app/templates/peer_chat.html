@@ -5,28 +5,191 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peer Chat Room</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Stream Chat CSS -->
     <link href="https://unpkg.com/stream-chat-react@11.15.0/dist/css/v2/index.css" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #f6f8ff;
+            --bg-2: #fdf7ff;
+            --card: #ffffff;
+            --ink: #1f2a44;
+            --muted: #5b6b8c;
+            --primary: #6c7bff;
+            --primary-2: #9b8cff;
+            --accent: #9be7d6;
+            --danger: #ff6b6b;
+            --shadow: 0 10px 30px rgba(31,42,68,0.08);
+            --radius: 14px;
+            --ring: 0 0 0 3px rgba(108,123,255,0.25);
+        }
+        
+        body {
+            background: linear-gradient(180deg, var(--bg), var(--bg-2));
+            color: var(--ink);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Helvetica, Arial, sans-serif;
+        }
+        
+        .elegant-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--accent), #7dd3d8);
+            color: var(--ink);
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .elegant-back-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .elegant-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(31,42,68,0.12), var(--ring);
+            color: var(--ink);
+            text-decoration: none;
+        }
+        
+        .elegant-back-btn:hover::before {
+            left: 100%;
+        }
+        
+        .elegant-back-btn:active {
+            transform: translateY(0);
+        }
+        
+        .elegant-back-btn i {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .elegant-back-btn:hover i {
+            transform: translateX(-3px);
+        }
+        
+        .elegant-end-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--danger), #ff8787);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .elegant-end-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 35px rgba(255,107,107,0.3);
+            color: white;
+        }
+        
+        .elegant-end-btn:active {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 10px;
+                padding: 16px;
+            }
+            
+            .elegant-back-btn {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            
+            .elegant-end-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        .chat-container {
+            background: var(--card);
+            border: 1px solid #eef2ff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-top: 20px;
+        }
+        
+        .chat-header {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eef2ff;
+        }
+        
+        .chat-header h2 {
+            color: var(--ink);
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        
+        .chat-header p {
+            color: var(--muted);
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2>Chat Room: {{ room.name }}</h2>
-        <p>Category: {{ room.category }}</p>
-        <div id="stream-chat-root">
-            <div class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading chat...</span>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>{{ room.name }}</h2>
+                <p>Category: {{ room.category }}</p>
+            </div>
+            
+            <div id="stream-chat-root">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading chat...</span>
+                    </div>
+                    <p>Connecting to chat...</p>
                 </div>
-                <p>Connecting to chat...</p>
+            </div>
+            
+            {% if is_creator and room.is_active %}
+            <form method="post" action="{% url 'end_chat_room' room.id %}" class="mt-3">
+                {% csrf_token %}
+                <button type="submit" class="elegant-end-btn">
+                    <i class="bi bi-stop-circle"></i>
+                    End Chat Room
+                </button>
+            </form>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{% url 'peer' %}" class="elegant-back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Rooms
+                </a>
             </div>
         </div>
-        {% if is_creator and room.is_active %}
-        <form method="post" action="{% url 'end_chat_room' room.id %}" class="mt-3">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">End Chat Room</button>
-        </form>
-        {% endif %}
-        <a href="{% url 'peer' %}" class="btn btn-link mt-3">Back to Rooms</a>
     </div>
     <!-- Stream Chat JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/stream-chat@8.40.0/dist/browser.full-bundle.min.js"></script>
@@ -61,7 +224,7 @@
                 }, userToken);
                 
                 console.log('Getting channel...');
-                const channel = client.channel('messaging', channelId, {
+                const channel = client.channel('team', channelId, {
                     name: "{{ room.name|escapejs }}",
                 });
                 await channel.watch();
@@ -84,11 +247,17 @@
                 // Render messages
                 function renderMessages(messages) {
                     messagesDiv.innerHTML = '';
-                    if (messages.length === 0) {
+                    
+                    // Filter out system messages that are for room ending and user joins
+                    const userMessages = messages.filter(msg => 
+                        !(msg.type === 'system' && (msg.action === 'room_ended' || msg.action === 'user_joined'))
+                    );
+                    
+                    if (userMessages.length === 0) {
                         messagesDiv.innerHTML = '<div class="text-muted text-center">No messages yet. Start the conversation!</div>';
                         return;
                     }
-                    messages.forEach(msg => {
+                    userMessages.forEach(msg => {
                         const isMine = msg.user.id === userId;
                         const msgDiv = document.createElement('div');
                         msgDiv.className = isMine ? 'text-end mb-2' : 'text-start mb-2';
@@ -101,12 +270,116 @@
 
                 // Initial load
                 renderMessages(channel.state.messages);
+                
+                // Check if there are any system.room_ended messages on initial load
+                const roomEndedMessage = channel.state.messages.find(msg => 
+                    msg.type === 'system' && msg.action === 'room_ended'
+                );
+                if (roomEndedMessage) {
+                    handleRoomEnded(roomEndedMessage.text);
+                    return; // Don't continue with normal chat setup
+                }
+                
+                // Show recent join notifications (last 5 minutes) as subtle chat messages
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                const recentJoinMessages = channel.state.messages.filter(msg => 
+                    msg.type === 'system' && 
+                    msg.action === 'user_joined' && 
+                    new Date(msg.created_at) > fiveMinutesAgo
+                );
+                
+                recentJoinMessages.forEach(msg => {
+                    const messagesDiv = document.getElementById('messages');
+                    if (messagesDiv) {
+                        const joinDiv = document.createElement('div');
+                        joinDiv.className = 'text-center my-2';
+                        joinDiv.innerHTML = `<small class="text-muted bg-light px-2 py-1 rounded">${msg.text}</small>`;
+                        messagesDiv.appendChild(joinDiv);
+                    }
+                });
+                
+                if (recentJoinMessages.length > 0) {
+                    const messagesDiv = document.getElementById('messages');
+                    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
 
-                // Listen for new messages
+                // Listen for new messages and system events
                 channel.on('message.new', event => {
                     console.log('New message received:', event.message);
+                    
+                    // Check if this is a room ended system message
+                    if (event.message.type === 'system' && event.message.action === 'room_ended') {
+                        handleRoomEnded(event.message.text);
+                        return;
+                    }
+                    
+                    // Check if this is a user joined system message
+                    if (event.message.type === 'system' && event.message.action === 'user_joined') {
+                        handleUserJoined(event.message.text);
+                        return;
+                    }
+                    
                     renderMessages(channel.state.messages);
                 });
+
+                // Function to handle room ended event
+                function handleRoomEnded(message) {
+                    const peerUrl = "{% url 'peer' %}";
+                    const chatRoot = document.getElementById('stream-chat-root');
+                    chatRoot.innerHTML = `
+                        <div class="alert alert-warning">
+                            <h5>⚠️ Chat Room Ended</h5>
+                            <p>${message}</p>
+                            <p>Redirecting you to the peer chat lobby in <span id="countdown">5</span> seconds...</p>
+                            <button onclick="window.location.href='${peerUrl}'" class="btn btn-primary">Go to Lobby Now</button>
+                        </div>
+                    `;
+                    
+                    // Countdown timer
+                    let countdown = 5;
+                    const countdownEl = document.getElementById('countdown');
+                    const timer = setInterval(() => {
+                        countdown--;
+                        if (countdownEl) countdownEl.textContent = countdown;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            window.location.href = peerUrl;
+                        }
+                    }, 1000);
+                }
+
+                // Function to handle user joined event
+                function handleUserJoined(message) {
+                    // Create a temporary notification
+                    const notificationDiv = document.createElement('div');
+                    notificationDiv.className = 'alert alert-info alert-dismissible fade show mt-2';
+                    notificationDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1050; max-width: 300px;';
+                    notificationDiv.innerHTML = `
+                        <i class="bi bi-person-plus-fill me-2"></i>${message}
+                        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                    `;
+                    
+                    // Add to page
+                    document.body.appendChild(notificationDiv);
+                    
+                    // Auto-remove after 4 seconds
+                    setTimeout(() => {
+                        if (notificationDiv.parentNode) {
+                            notificationDiv.classList.remove('show');
+                            setTimeout(() => notificationDiv.remove(), 150);
+                        }
+                    }, 4000);
+                    
+                    // Also add a subtle message to the chat area
+                    const messagesDiv = document.getElementById('messages');
+                    if (messagesDiv) {
+                        const joinDiv = document.createElement('div');
+                        joinDiv.className = 'text-center my-2';
+                        joinDiv.innerHTML = `<small class="text-muted bg-light px-2 py-1 rounded">${message}</small>`;
+                        messagesDiv.appendChild(joinDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }
+                }
 
                 // Send message
                 form.addEventListener('submit', async (e) => {
