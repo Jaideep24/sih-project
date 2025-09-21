@@ -1,8 +1,64 @@
-{% extends "index.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book Appointment | Soulence</title>
+  <style>
+    :root{
+      --bg: #f6f8ff;
+      --bg-2: #fdf7ff;
+      --card: #ffffff;
+      --ink: #1f2a44;
+      --muted: #5b6b8c;
+      --primary: #6c7bff;
+      --primary-2:#9b8cff;
+      --accent: #9be7d6;
+      --danger: #ff6b6b;
+      --shadow: 0 10px 30px rgba(31,42,68,0.08);
+      --radius: 14px;
+      --ring: 0 0 0 3px rgba(108,123,255,0.25);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;color:var(--ink);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"}
+    body{background: linear-gradient(180deg,var(--bg), var(--bg-2));}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.7);backdrop-filter: blur(10px);border-bottom:1px solid #eef2ff}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
+    .logo{width:38px;height:38px;border-radius:5px;background: url('https://i.ibb.co/cc08mZ9Q/Soulence-logo.jpg') center/cover no-repeat, linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow: var(--shadow)}
+    nav ul{display:flex;flex-wrap:wrap;gap:14px;list-style:none;padding:0;margin:0}
+    nav a{padding:8px 12px;border-radius:10px;color:var(--muted)}
+    nav a:hover, nav a.active{background:#eef2ff;color:var(--ink)}
+    .card{background:var(--card);border:1px solid #eef2ff;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;padding:12px 18px;border:none;border-radius:12px;font-weight:700;box-shadow: var(--shadow);cursor:pointer}
+    .btn:focus{outline:none;box-shadow: var(--shadow), var(--ring)}
+    .subtitle{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><span>Soulence</span></div>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/support/">Support Hub</a></li>
+          <li><a class="active" href="/book-slot/">Book Appointment</a></li>
+          <li><a href="/wellness/">Wellness Hub</a></li>
+          <li><a href="/peer/">Peer Support</a></li>
+          <li><a href="/myspace/">My Space</a></li>
+          <li><a href="/logout/" style="color:#fff;background:linear-gradient(135deg,#6c7bff,#9b8cff);padding:8px 14px;">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 40px 0;">
+
 {% load static %}
 {% load custom_filters %}
-
-{% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
   <h1 style="margin-bottom: 8px;">Book a Counsellor Slot</h1>
   <p class="subtitle" style="margin-bottom: 28px;">Browse available slots and book your appointment with a campus counsellor. Your bookings and waiting list are shown below.</p>
@@ -101,4 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endfor %}
   </div>
 </div>
-{% endblock %}
+
+  </main>
+</body>
+</html>
