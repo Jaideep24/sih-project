@@ -64,20 +64,28 @@ def peer_chat(request, room_id):
 	is_creator = (room.creator == student)
 	if not is_creator:
 		try:
+			# Ensure user exists in StreamChat with proper permissions
+			from .streamchat_api import get_stream_client
+			client = get_stream_client()
+			client.upsert_users([{
+				'id': str(student.student_id),
+				'name': student.name if student.name else f'Student_{student.student_id}',
+				'role': 'user'
+			}])
+			
 			# Only send join notification for new members
 			if is_new_member:
 				user_display_name = student.name if student.name else student.student_id
 				add_user_to_channel(str(room.id), str(student.student_id), user_display_name)
 			else:
 				# For existing members, just ensure they're in the channel without notification
-				from .streamchat_api import get_stream_client
-				client = get_stream_client()
-				channel = client.channel("team", str(room.id))  # Changed from "messaging" to "team"
+				channel = client.channel("messaging", str(room.id))  # Changed from "team" to "messaging"
 				channel.add_members([str(student.student_id)])
 		except Exception as e:
 			print(f"Failed to add user to Stream channel: {e}")
 	
-	stream_token = generate_user_token(str(student.student_id))
+	student_name = student.name if student.name else f'Student_{student.student_id}'
+	stream_token = generate_user_token(str(student.student_id), student_name)
 	return render(request, 'peer_chat.html', {
 		'room': room,
 		'student': student,

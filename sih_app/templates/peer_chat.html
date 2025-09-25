@@ -224,11 +224,25 @@
                 }, userToken);
                 
                 console.log('Getting channel...');
-                const channel = client.channel('team', channelId, {
+                const channel = client.channel('messaging', channelId, {
                     name: "{{ room.name|escapejs }}",
                 });
-                await channel.watch();
-                console.log('Channel loaded successfully');
+                
+                try {
+                    await channel.watch();
+                    console.log('Channel loaded successfully');
+                } catch (channelError) {
+                    console.error('Channel watch error:', channelError);
+                    // Try to join the channel if user is not a member
+                    if (channelError.message.includes('not allowed') || channelError.message.includes('not a member')) {
+                        console.log('Attempting to add user to channel...');
+                        await channel.addMembers([userId]);
+                        await channel.watch();
+                        console.log('Successfully joined channel');
+                    } else {
+                        throw channelError; // Re-throw if it's a different error
+                    }
+                }
 
                 // Basic chat UI rendering
                 const chatRoot = document.getElementById('stream-chat-root');
@@ -397,16 +411,49 @@
                 
             } catch (error) {
                 console.error('Stream Chat initialization error:', error);
+                let errorMessage = error.message;
+                let troubleshooting = '';
+                
+                // Provide specific troubleshooting for common errors
+                if (error.message.includes('not allowed to perform action ReadChannel')) {
+                    troubleshooting = `
+                        <div class="mt-3">
+                            <h6>Troubleshooting Steps:</h6>
+                            <ul class="small">
+                                <li>The user permissions may need to be updated</li>
+                                <li>Try refreshing the page to reload user permissions</li>
+                                <li>Contact support if the issue persists</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (error.message.includes('User does not exist')) {
+                    troubleshooting = `
+                        <div class="mt-3">
+                            <h6>Troubleshooting Steps:</h6>
+                            <ul class="small">
+                                <li>User account may not be properly set up in the chat system</li>
+                                <li>Try logging out and logging back in</li>
+                                <li>Contact support if the issue persists</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+                
                 document.getElementById('stream-chat-root').innerHTML = `
                     <div class="alert alert-danger">
                         <h5>Chat connection failed</h5>
-                        <p>Error: ${error.message}</p>
+                        <p>Error: ${errorMessage}</p>
                         <p>Please check the console for more details.</p>
+                        ${troubleshooting}
                         <div class="mt-2">
                             <small>Debug info: API Key: ${apiKey ? 'Present' : 'Missing'}, Token: ${userToken ? 'Present' : 'Missing'}, User: ${userId}</small>
                         </div>
                         <div class="mt-2">
                             <small>StreamChat Library: ${typeof window.StreamChat !== 'undefined' ? 'Loaded' : 'Failed to load'}</small>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="location.reload()">Try Again</button>
+                            <a href="{% url 'peer' %}" class="btn btn-secondary ms-2">Back to Rooms</a>
                         </div>
                     </div>
                 `;
