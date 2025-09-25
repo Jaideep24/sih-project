@@ -1,0 +1,50 @@
+# Django Framework
+Django==5.2.6
+
+# Stream Chat SDK for real-time messaging
+stream-chat==4.26.0
+
+# HTTP requests library
+requests==2.31.0
+
+# Environment variable management
+python-dotenv==1.0.0
+
+# Date and time utilities
+python-dateutil==2.8.2
+
+# JSON Web Token implementation
+PyJWT==2.8.0
+
+# URL manipulation library
+urllib3==2.0.7
+
+# Character encoding detection
+chardet==5.2.0
+
+# HTTP library
+httpx==0.25.0
+
+# Timezone handling
+pytz==2023.3
+
+# SQL toolkit (if needed for advanced database operations)
+sqlparse==0.4.4
+
+# ASGI server for production (optional)
+gunicorn==21.2.0
+
+# Cross-Origin Resource Sharing support
+django-cors-headers==4.3.1
+
+# Django extensions (optional, for development)
+django-extensions==3.2.3
+
+# Pillow for image processing (if handling user avatars/images)
+Pillow==10.0.1
+
+# Markdown support (if needed for content formatting)
+Markdown==3.5.1
+
+# Cryptography for enhanced security
+cryptography==41.0.7

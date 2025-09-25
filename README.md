@@ -8,7 +8,7 @@
 
 ## 📖 About the Project
 
-Soulence is a comprehensive digital platform designed to support student mental health and well-being. Developed during the Smart India Hackathon 2024, this platform addresses the growing mental health challenges faced by students in educational institutions by providing peer support, professional counseling, and wellness tracking tools.
+Soulence is a comprehensive digital platform designed to support student mental health and well-being. Developed during the Smart India Hackathon 2025, this platform addresses the growing mental health challenges faced by students in educational institutions by providing peer support, professional counseling, and wellness tracking tools.
 
 Our platform creates a safe, supportive environment where students can:
 - Connect with peers through moderated chat rooms
@@ -225,7 +225,7 @@ This project was developed for the Smart India Hackathon 2025. Feel free to use 
 
 ## 🙏 Acknowledgments
 
-- **Smart India Hackathon 2024** - For providing the platform to showcase our solution
+- **Smart India Hackathon 2025** - For providing the platform to showcase our solution
 - **Stream Chat** - For their excellent real-time messaging API
 - **Django Community** - For the robust web framework
 - **PythonAnywhere** - For reliable hosting services
