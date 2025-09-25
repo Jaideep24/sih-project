@@ -1,6 +1,6 @@
 # 🧠 Soulence - Student Mental Health Platform
 
-> **Smart India Hackathon 2024 Project**  
+> **Smart India Hackathon 2025 Project**  
 > **Team:** AuxiliumAI  
 > **Live Website:** [https://auxiliumai.pythonanywhere.com](https://auxiliumai.pythonanywhere.com)
 
@@ -219,7 +219,7 @@ While this was our hackathon project, we welcome contributions and suggestions! 
 
 ## 📄 License
 
-This project was developed for the Smart India Hackathon 2024. Feel free to use this code for educational and non-commercial purposes.
+This project was developed for the Smart India Hackathon 2025. Feel free to use this code for educational and non-commercial purposes.
 
 ---
 
@@ -243,5 +243,5 @@ For any questions or inquiries about this project, feel free to reach out to any
 
 <div align="center">
   <h3>💙 Built with care for student mental health and well-being 💙</h3>
-  <p><strong>Team AuxiliumAI - Smart India Hackathon 2024</strong></p>
+  <p><strong>Team AuxiliumAI - Smart India Hackathon 2025</strong></p>
 </div>
