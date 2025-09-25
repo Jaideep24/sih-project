@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat History - {{ room.name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Stream Chat CSS -->
+    <link href="https://unpkg.com/stream-chat-react@11.15.0/dist/css/v2/index.css" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #f6f8ff;
+            --bg-2: #fdf7ff;
+            --card: #ffffff;
+            --ink: #1f2a44;
+            --muted: #5b6b8c;
+            --primary: #6c7bff;
+            --primary-2: #9b8cff;
+            --accent: #9be7d6;
+            --danger: #ff6b6b;
+            --shadow: 0 10px 30px rgba(31,42,68,0.08);
+            --radius: 14px;
+            --ring: 0 0 0 3px rgba(108,123,255,0.25);
+        }
+        
+        body {
+            background: linear-gradient(180deg, var(--bg), var(--bg-2));
+            color: var(--ink);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Helvetica, Arial, sans-serif;
+        }
+        
+        .elegant-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--accent), #7dd3d8);
+            color: var(--ink);
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .elegant-back-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .elegant-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(31,42,68,0.12), var(--ring);
+            color: var(--ink);
+            text-decoration: none;
+        }
+        
+        .elegant-back-btn:hover::before {
+            left: 100%;
+        }
+        
+        .elegant-back-btn:active {
+            transform: translateY(0);
+        }
+        
+        .elegant-back-btn i {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .elegant-back-btn:hover i {
+            transform: translateX(-3px);
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 10px;
+                padding: 16px;
+            }
+            
+            .elegant-back-btn {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+        }
+        
+        .chat-container {
+            background: var(--card);
+            border: 1px solid #eef2ff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-top: 20px;
+        }
+        
+        .chat-header {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eef2ff;
+        }
+        
+        .chat-header h2 {
+            color: var(--ink);
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        
+        .chat-header p {
+            color: var(--muted);
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .history-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2><i class="bi bi-clock-history me-2"></i>{{ room.name }}</h2>
+                <p>Category: {{ room.category }}</p>
+                <span class="history-badge">📚 Chat History (Read-Only)</span>
+            </div>
+            
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Chat History View:</strong> This is a completed chat room. You can view the conversation history, but cannot send new messages.
+            </div>
+            
+            <div id="stream-chat-root">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading chat history...</span>
+                    </div>
+                    <p>Loading conversation history...</p>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'peer' %}" class="elegant-back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Rooms
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- Stream Chat JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/stream-chat@8.40.0/dist/browser.full-bundle.min.js"></script>
+    <script>
+        const apiKey = "{{ stream_api_key }}";
+        const userId = "{{ student.student_id }}";
+        const userName = "{{ student.student_id }}" || "Student_{{ student.student_id }}";
+        const userToken = "{{ stream_token }}";
+        const channelId = "{{ room.id }}";
+
+        console.log('Stream Chat History Config:', { apiKey, userId, userName, channelId });
+        console.log('StreamChat available:', typeof window.StreamChat);
+
+        async function initStreamChatHistory() {
+            try {
+                if (!apiKey || !userToken) {
+                    throw new Error('Missing API key or user token');
+                }
+                
+                // Check if StreamChat is available
+                if (typeof window.StreamChat === 'undefined') {
+                    throw new Error('Stream Chat library failed to load. Please check your internet connection.');
+                }
+                
+                const client = new window.StreamChat(apiKey);
+                
+                console.log('Connecting user to Stream Chat for history...');
+                await client.connectUser({
+                    id: userId,
+                    name: userName,
+                }, userToken);
+                
+                console.log('Getting channel for history...');
+                const channel = client.channel('messaging', channelId, {
+                    name: "{{ room.name|escapejs }}",
+                });
+                
+                try {
+                    await channel.watch();
+                    console.log('Channel history loaded successfully');
+                } catch (channelError) {
+                    console.error('Channel watch error:', channelError);
+                    // For history view, we might not be able to join if removed, just try to query
+                    if (channelError.message.includes('not allowed') || channelError.message.includes('not a member')) {
+                        console.log('User not in channel, loading available history...');
+                        // Continue to show what we can
+                    } else {
+                        throw channelError;
+                    }
+                }
+
+                // Read-only chat history UI
+                const chatRoot = document.getElementById('stream-chat-root');
+                chatRoot.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Chat history loaded successfully!
+                    </div>
+                    <div id="messages" style="height:400px; overflow-y:auto; background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:15px; border: 2px dashed #dee2e6;">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-clock-history" style="font-size: 24px;"></i>
+                            <p class="mt-2 mb-0">Loading conversation history...</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-lock me-2"></i>
+                        <strong>Read-Only Mode:</strong> This chat room has ended. You can view the conversation history but cannot send new messages.
+                    </div>
+                `;
+                
+                const messagesDiv = document.getElementById('messages');
+
+                // Render messages function (read-only)
+                function renderMessages(messages) {
+                    messagesDiv.innerHTML = '';
+                    
+                    // Filter out system messages that are for room ending and user joins
+                    const userMessages = messages.filter(msg => 
+                        !(msg.type === 'system' && (msg.action === 'room_ended' || msg.action === 'user_joined'))
+                    );
+                    
+                    if (userMessages.length === 0) {
+                        messagesDiv.innerHTML = `
+                            <div class="text-muted text-center">
+                                <i class="bi bi-chat-dots" style="font-size: 48px; opacity: 0.3;"></i>
+                                <p class="mt-3">No messages found in this chat room.</p>
+                                <small>The conversation history may not be available or the room had no messages.</small>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    userMessages.forEach(msg => {
+                        const isMine = msg.user.id === userId;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = isMine ? 'text-end mb-3' : 'text-start mb-3';
+                        const displayName = msg.user.name || msg.user.id;
+                        const timeStr = new Date(msg.created_at).toLocaleString();
+                        
+                        msgDiv.innerHTML = `
+                            <div class="d-inline-block p-2 rounded ${isMine ? 'bg-primary text-white' : 'bg-light'}">
+                                <div class="fw-bold" style="font-size: 0.85em;">${displayName}</div>
+                                <div>${msg.text}</div>
+                                <small class="${isMine ? 'text-white-50' : 'text-muted'}" style="font-size: 0.75em;">${timeStr}</small>
+                            </div>
+                        `;
+                        messagesDiv.appendChild(msgDiv);
+                    });
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+
+                // Initial load of messages
+                renderMessages(channel.state.messages);
+                
+                // Show any room ended messages as information
+                const roomEndedMessage = channel.state.messages.find(msg => 
+                    msg.type === 'system' && msg.action === 'room_ended'
+                );
+                if (roomEndedMessage) {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-info mt-3';
+                    alertDiv.innerHTML = `<i class="bi bi-info-circle me-2"></i>${roomEndedMessage.text}`;
+                    chatRoot.appendChild(alertDiv);
+                }
+                
+            } catch (error) {
+                console.error('Stream Chat history initialization error:', error);
+                let errorMessage = error.message;
+                let troubleshooting = '';
+                
+                // Provide specific troubleshooting for common errors
+                if (error.message.includes('not allowed to perform action')) {
+                    troubleshooting = `
+                        <div class="mt-3">
+                            <h6>Possible Reasons:</h6>
+                            <ul class="small">
+                                <li>You may have been removed from this chat room</li>
+                                <li>The chat history may not be available for this room</li>
+                                <li>There might be permission restrictions on viewing old messages</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('stream-chat-root').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Unable to load chat history</h5>
+                        <p>Error: ${errorMessage}</p>
+                        ${troubleshooting}
+                        <div class="mt-2">
+                            <small>Debug info: API Key: ${apiKey ? 'Present' : 'Missing'}, Token: ${userToken ? 'Present' : 'Missing'}, User: ${userId}</small>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="location.reload()">Try Again</button>
+                            <a href="{% url 'peer' %}" class="btn btn-secondary ms-2">Back to Rooms</a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small delay to ensure the script has loaded
+            setTimeout(initStreamChatHistory, 100);
+        });
+    </script>
+</body>
+</html>

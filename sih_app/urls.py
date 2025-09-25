@@ -12,6 +12,7 @@ urlpatterns = [
     path('myspace/', views.myspace, name='myspace'),
     path('peer/', views.peer, name='peer'),
     path('peer/chat/<int:room_id>/', views.peer_chat, name='peer_chat'),
+    path('peer/history/<int:room_id>/', views.peer_chat_history, name='peer_chat_history'),
     path('peer/end/<int:room_id>/', views.end_chat_room, name='end_chat_room'),
     path('support/', views.support, name='support'),
     path('wellness/', views.wellness, name='wellness'),

@@ -35,7 +35,15 @@ def peer(request):
 		else:
 			form_errors = form.errors
 	active_rooms = ChatRoom.objects.filter(institution=institution, is_active=True)
-	completed_rooms = ChatRoom.objects.filter(institution=institution, is_active=False)
+	
+	# Only show completed rooms where the current student was a member
+	completed_room_memberships = ChatRoomMembership.objects.filter(
+		student=student, 
+		room__institution=institution, 
+		room__is_active=False
+	).select_related('room')
+	completed_rooms = [membership.room for membership in completed_room_memberships]
+	
 	return render(request, 'peer.html', {
 		'active_rooms': active_rooms,
 		'completed_rooms': completed_rooms,
@@ -108,6 +116,38 @@ def end_chat_room(request, room_id):
 	end_stream_channel(str(room.id), creator_name)
 	
 	return redirect('peer')
+
+def peer_chat_history(request, room_id):
+	if not request.session.get('user_type'):
+		return redirect('login')
+	student = Student.objects.get(email=request.session['user_email'])
+	room = get_object_or_404(ChatRoom, id=room_id)
+	
+	# Check if the room is completed (not active)
+	if room.is_active:
+		from django.contrib import messages
+		messages.info(request, 'This chat room is still active. Join it to participate!')
+		return redirect('peer_chat', room_id=room_id)
+	
+	# Check if user was a member of this room
+	try:
+		membership = ChatRoomMembership.objects.get(room=room, student=student)
+	except ChatRoomMembership.DoesNotExist:
+		from django.contrib import messages
+		messages.error(request, 'You were not a member of this chat room.')
+		return redirect('peer')
+	
+	# Generate token for viewing history (read-only access)
+	student_name = student.name if student.name else f'Student_{student.student_id}'
+	stream_token = generate_user_token(str(student.student_id), student_name)
+	
+	return render(request, 'peer_chat_history.html', {
+		'room': room,
+		'student': student,
+		'is_creator': (room.creator == student),
+		'stream_api_key': settings.STREAM_API_KEY,
+		'stream_token': stream_token,
+	})
 
 # Dashboard view
 def dashboard(request):

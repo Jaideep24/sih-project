@@ -58,7 +58,9 @@
     .room-name{font-weight:600;color:var(--ink);margin:0 0 4px}
     .room-category{font-size:13px;color:var(--muted)}
     .btn-join{background:linear-gradient(135deg,#22c55e,#16a34a);padding:8px 16px;font-size:13px;margin-left:12px}
-    .btn-view{background:linear-gradient(135deg,var(--muted),#475569);padding:8px 16px;font-size:13px;margin-left:12px}
+    .btn-view{background:linear-gradient(135deg,#f59e0b,#d97706);padding:8px 16px;font-size:13px;margin-left:12px;position:relative}
+    .btn-view:hover{background:linear-gradient(135deg,#fbbf24,#f59e0b);transform:translateY(-1px)}
+    .btn-view::before{content:'📚';margin-right:6px}
     .empty-state{text-align:center;padding:32px;color:var(--muted)}
 
     .alert{padding:12px 16px;border-radius:10px;margin-bottom:16px}
@@ -139,7 +141,7 @@
                 <div class="room-name">{{ room.name }}</div>
                 <div class="room-category">{{ room.category }}</div>
               </div>
-              <a href="{% url 'peer_chat' room.id %}" class="btn btn-view">View History</a>
+              <a href="{% url 'peer_chat_history' room.id %}" class="btn btn-view">View History</a>
             </div>
           {% empty %}
             <div class="empty-state">No completed chat rooms yet.</div>
