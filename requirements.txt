@@ -1,6 +1,12 @@
 # Django Framework
 Django==5.2.6
 
+# PostgreSQL database adapter
+psycopg2-binary==2.9.9
+
+# Database URL parsing
+dj-database-url==2.1.0
+
 # Stream Chat SDK for real-time messaging
 stream-chat==4.26.0
 
